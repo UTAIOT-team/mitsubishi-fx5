@@ -260,7 +260,7 @@ class FX5:
 		if type==0:
 			#print('msg',msg)
 			#print('re',re)
-			return self.to_int16_signed(re[1], re[0])
+			return self.to_int16_unsigned(re[1], re[0])
 		elif type==1:	
 			return self.to_string(re[0], re[1])
 		elif type==2:
@@ -268,7 +268,7 @@ class FX5:
 			# print('re',re)
 			#return msg[19]
 			#return self.to_int32signed(re[3],re[2],re[1],re[0])
-			return self.to_int32_signed(re[3],re[2],re[1],re[0])
+			return self.to_int32_unsigned(re[3],re[2],re[1],re[0])
 		else:
 			return re
 
@@ -347,6 +347,21 @@ class FX5:
 			int：signed 16-bit
 		'''
 		return (upper<<8) + lower
+		
+	def to_int32_unsigned(self, r32,r24,r16,r8):
+		'''convert 2-byte(8bit/hex) to signed 32-bit
+		
+		Args:
+			r32 (int): 24-32 btye
+			r24 (int): 16-23 btye
+			r16 (int): 8-15 btye
+			r8 (int): 0-7 btye
+
+		Return:
+			int：signed 16-bit
+		'''
+		num = (r32<<24) + (r24<<16) + (r16<<8) + r8
+		return num
 
 	def to_string(self, upper, lower):
 		'''convert 2-byte(8bit/hex) to two strings

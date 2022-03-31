@@ -39,6 +39,8 @@ def PLC_connect(name,host,reg,q,i,times):
 	except OSError as err:
 		print(name, err)
 		res['name']=name
+		res['parts']=None
+		res['value']=None
 		q[i]=res
 
 
@@ -66,17 +68,18 @@ class DB_connect:
 			#predf.columns=['parts','status','UID','WID']
 			predf.insert(0,'name',table)
 			#st1=predf.loc[0,'status'].astype("int")
-			return predf.iloc[0,0:].to_dict()
 		else:
 			#can't find id
 			#st1=None
-			predf=pd.DataFrame([{'name':name, 'parts':'', 'value':'', 'user_id':'', 'work_order_id':''}])
+			predf=pd.DataFrame([{'name':name, 'parts':None, 'value':None, 'user_id':None, 'work_order_id':None}])
 		t2=time.time()
+		return predf.iloc[0,0:].to_dict()
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
 
 	def write_to_sql(self,q):
 		print('new------------------')
 		newdf=pd.json_normalize(q)
+		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		print(newdf)
 		preq=[{} for _ in range(len(q))]
 		
@@ -87,6 +90,7 @@ class DB_connect:
 
 		print('pre------------------')
 		predf=pd.json_normalize(preq)
+		predf['work_order_id']=predf['work_order_id'].astype("Int64")
 		print(predf)
 		
 
@@ -95,40 +99,42 @@ class DB_connect:
 			print(q[i])
 			# print(str(newdf.iloc[i,2]),type(newdf.iloc[i,2]))
 			# None is a nan as numpy.float type
-			if(str(newdf.iloc[i,2])!= 'nan' and str(newdf.iloc[i,2])!= 'None' ):
-				t1=time.time()
-				table=newdf.loc[i,'name'].lower()
-				sql = "Select * from " + table
-				st1=predf.loc[i,'value'].astype("int")
-				st2=newdf.loc[i,'value'].astype("int")
-				if st1!=st2:
-					#print(table,st1,st2,'not equal')
-					#print(newdf.iloc[i,1:])
-					#resdf=newdf.iloc[[i],1:]
-					print(newdf.iloc[[i],1:])
-					t2=time.time()
-					newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
-					print(table,st1,st2,'not equal','| write to database cost time %f' % (t2-t1))
-				
-				else:
+			# if(str(newdf.iloc[i,2])!= 'nan' and str(newdf.iloc[i,2])!= 'None' ):
+			t1=time.time()
+			table=newdf.loc[i,'name'].lower()
+			sql = "Select * from " + table
+			st1=predf.loc[i,'value'].astype("int")
+			if str(newdf.loc[i,'value'])=='None':
+				newdf.loc[i,'value']=pd.NA
+			st2=newdf.loc[i,'value'].astype("int")
+			if st1!=st2:
+				#print(table,st1,st2,'not equal')
+				#print(newdf.iloc[i,1:])
+				#resdf=newdf.iloc[[i],1:]
+				print(newdf.iloc[[i],1:])
+				t2=time.time()
+				newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
+				print(table,st1,st2,'not equal','| write to database cost time %f' % (t2-t1))
+			
+			else:
 
-					# update last one id to database
-					#with engine.connect() as dbcnn:
-					#	colname=newdf.columns
-					#	qurry=[str(colname[i])+"='"+str(newdf.iloc[0,i])+"'" for i in range(len(colname))]
-					#	print(qurry)
-					#	sql = f"""
-					#	UPDATE {table}
-					#	SET {','.join(qurry)}
-					#	WHERE {"id="+iddf.iloc[0,0].astype("str")};
-					#	"""
-					#	dbcnn.execute(sql)
-					#print(table,st1,st2,'is equal')
-					#resdf=newdf.iloc[[i],1:]
-					#print(newdf.iloc[[i],1:])
-					newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
-					t2=time.time()
-					print(table,st1,st2,'is equal','| write to database cost time %f' % (t2-t1))
+				# update last one id to database
+				#with engine.connect() as dbcnn:
+				#	colname=newdf.columns
+				#	qurry=[str(colname[i])+"='"+str(newdf.iloc[0,i])+"'" for i in range(len(colname))]
+				#	print(qurry)
+				#	sql = f"""
+				#	UPDATE {table}
+				#	SET {','.join(qurry)}
+				#	WHERE {"id="+iddf.iloc[0,0].astype("str")};
+				#	"""
+				#	dbcnn.execute(sql)
+				#print(table,st1,st2,'is equal')
+				#resdf=newdf.iloc[[i],1:]
+				#print(newdf.iloc[[i],1:])
+				newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
+				t2=time.time()
+				print(table,st1,st2,'is equal','| write to database cost time %f' % (t2-t1))
 				
 
 
@@ -173,11 +179,14 @@ if __name__ == '__main__':
 
 		# print(q)
 		df=pd.DataFrame(q)
+		df['work_order_id']=df['work_order_id'].astype("Int64")
+		df['parts']=df['parts'].astype("Int64")
 		print(df)
-		# conn = DB_connect()
-		# conn.write_to_sql(q)
+		conn = DB_connect()
+		if times > 1: #第一次連線值不紀錄
+			conn.write_to_sql(q)
 		
 		print(datetime.now())
-		print('down all cost time %f' % (time.time()-allst))
+		print('done all cost time %f' % (time.time()-allst))
 		time.sleep(10)
 	
