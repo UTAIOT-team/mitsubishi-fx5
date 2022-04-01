@@ -7,9 +7,26 @@
 # DB_connect: 使用class 操作資料庫讀取、寫入及資料庫資料減量。
 # OEE_Class: 使用class 計算OEE相關數據。
 # 讀取machine_config.xlsx 機台名稱。
-# update_schedule
+#--------------------------------------------------------------------
+# schedule 定義
+# 早班		08:00-17:00 標準工時 8h   除外工時 1h
+# 中班		17:00-23:59 標準工時 6.5h 除外工時 0.5h
+# 夜班-隔日	00:00-08:00 標準工時 8h
+#
+# 除外工時 定義
+# 除外工時需做加班檢查
+# 中午休息時間	12:00-13:00
+# 晚上休息時間	17:00-17:30 累計至中班
+# 
+# 每日計畫行程自動判斷 定義
+# 每日早班計畫 預設	08:00-17:00
+# 每日中班計畫 預設	17:30-18:30 每小時累計至 23:59
+# 每日晚班計畫 預設	00:00-01:00 每小時累計至 08:00
+# 
+# 
 # -------------------------------------------------------------------
-#公式定義
+# OEE公式定義
+# OEE,標準產量,實際產量  先分班計算,再累計計算(由SQL 語法於dashboard累計)
 #1.OEE
 #公式:OEE=A*P*Q=(實際機時/標準機時)*(實際產能/標準產能)*1
 #A=稼働率  P=產能效率   Q=良率
@@ -30,6 +47,7 @@ from datetime import timedelta
 from datetime import datetime
 VALUE_OF_PLAN_ST =1
 VALUE_OF_PLAN_ED =2
+DAY_SHIFT=timedelta(hours=8)
 
 class OEE_Class:
 	machine = ''
@@ -63,13 +81,14 @@ class OEE_Class:
 		self.machine = name
 		self.actual_pcs = seldf["parts"].max()-seldf["parts"].min()
 		seldf=seldf.dropna()
-		# st_dt = seldf["date"].min()
+		# st_dt = seldf.date.min()
 		st_dt= seldf[seldf.value==1].date.min()
-		end_dt = seldf["date"].max()
+		end_dt = seldf.date.max()
 		print(st_dt.time() , datetime.min.time().replace(hour=8),st_dt.time() > datetime.min.time().replace(hour=8))
 		if st_dt.time() > datetime.min.time().replace(hour=8):
 			st_dt=st_dt.replace(hour=8,minute=0,second=0,microsecond=0)
 			print(st_dt)
+		# st_dt = seldf.date.min()
 		# max_id = seldf[seldf.value==1].index.max()
 		# print(max_id)
 		# end_dt = seldf.shift(-1).loc[max_id,'date']
@@ -78,7 +97,6 @@ class OEE_Class:
 		print('test st ed rest---------------------------------------')
 		print(st_dt,end_dt,rest)
 		self.total_time = end_dt-st_dt-rest
-		standard=0
 		self.nomal_time = timedelta(days=0)
 		
 		work_time=pd.DataFrame({},columns=['work_id', 'status', 'during'])
@@ -230,39 +248,35 @@ class OEE_Class:
 class DB_connect:
 	# database setting
 	__engine = None
-	today = ''
-	now = ''
+	today_min = ''
 	today_max=''
 
 	def __init__(self):
 		with open ("dbconfig.txt", "r") as dbconfig:
 			data=dbconfig.readlines()
 		self.__engine=sqla.create_engine('mysql+mysqlconnector://'+data[0])
-		self.today=str(datetime.combine(datetime.today().date(),datetime.min.time()))
-		self.today_max=str(datetime.combine(datetime.today().date(),datetime.max.time()))
-		self.now=str(datetime.now())
+		self.today_min=datetime.combine(datetime.today().date(),datetime.min.time()) - DAY_SHIFT
+		self.today_max=datetime.combine(datetime.today().date(),datetime.max.time())- DAY_SHIFT
 		
 	def read_schedule(self,name,seldf):
 		rest= timedelta(0)
 		table = "schedule_raw"
 		sql = "Select * from " + table + " where date between '" \
-			+ self.today + "' and '" + self.today_max + "' and name='" + name + "'"
+			+ str(self.today_min) + "' and '" + str(self.today_max) + "' and name='" + name + "'"
 		schdf = pd.read_sql_query(sql, self.__engine)
 		global VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED
-		today_min=datetime.combine(datetime.today().date(),datetime.min.time()) 
-		today_max=datetime.combine(datetime.today().date(),datetime.max.time()) 
+		today_min=self.today_min
+		today_max=self.today_max
 		if schdf.empty:
 			init=[
-				[today_min,name,VALUE_OF_PLAN_ED,'first'],#date start
-				[today_min,name,VALUE_OF_PLAN_ED,'midnight'],#midnight
-				[today_min,name,VALUE_OF_PLAN_ED,'midnight'],#midnight
 				[today_min.replace(hour=8),name,VALUE_OF_PLAN_ST,'morning'],#morning
 				[today_min.replace(hour=12),name,VALUE_OF_PLAN_ED,'morning'],#noon
 				[today_min.replace(hour=13),name,VALUE_OF_PLAN_ST,'afternoon'],#afternoon
 				[today_min.replace(hour=17),name,VALUE_OF_PLAN_ED,'afternoon'],#下班
 				[today_min.replace(hour=17,minute=30),name,VALUE_OF_PLAN_ED,'night'],#night
 				[today_min.replace(hour=17,minute=30),name,VALUE_OF_PLAN_ED,'night'],#night
-				[today_max,name,VALUE_OF_PLAN_ED,'last']#date end
+				[today_min,name,VALUE_OF_PLAN_ED,'midnight'],#midnight
+				[today_min,name,VALUE_OF_PLAN_ED,'midnight'],#midnight
 				]
 			schdf=pd.DataFrame(init,columns=['date', 'name', 'value','raw_by'])
 			# 新增至資料庫 and reload
@@ -398,11 +412,11 @@ WHERE id ={schdf.loc[i,'id']};
 		
 	def read_from(self,name):
 		t1=time.time()
-		print(self.today)
+		print(self.today_min)
 		table = name
 
 		#select ID between today
-		sql = "Select id from " + table + " where date between '" + self.today + "' and '" + self.today_max + "'"
+		sql = "Select id from " + table + " where date between '" + str(self.today_min) + "' and '" + str(self.today_max) + "'"
 		iddf = pd.read_sql_query(sql, self.__engine)
 		#print(iddf)
 		if not iddf.empty and len(iddf) >=2 :

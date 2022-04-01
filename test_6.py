@@ -14,6 +14,7 @@ import time
 import threading
 from fx5 import FX5
 import pandas as pd
+import numpy as np
 import sqlalchemy as sqla
 from sqlalchemy import update
 from datetime import datetime
@@ -21,7 +22,7 @@ from datetime import timedelta
 
 
 def PLC_connect(name,host,reg,q,i,times):
-	res={'name':'','parts': None ,'value': None , 'user_id': None ,'work_order_id': None}
+	res={'name':'','parts': np.nan ,'value': np.nan , 'user_id': np.nan ,'work_order_id': np.nan}
 
 	try:
 		fx5 = FX5.get_connection(host)
@@ -39,8 +40,8 @@ def PLC_connect(name,host,reg,q,i,times):
 	except OSError as err:
 		print(name, err)
 		res['name']=name
-		res['parts']=None
-		res['value']=None
+		res['parts']=np.nan
+		res['value']=np.nan
 		q[i]=res
 
 
@@ -71,7 +72,7 @@ class DB_connect:
 		else:
 			#can't find id
 			#st1=None
-			predf=pd.DataFrame([{'name':name, 'parts':None, 'value':None, 'user_id':None, 'work_order_id':None}])
+			predf=pd.DataFrame([{'name':name, 'parts':np.nan, 'value':np.nan, 'user_id':np.nan, 'work_order_id':np.nan}])
 		t2=time.time()
 		return predf.iloc[0,0:].to_dict()
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
@@ -104,9 +105,10 @@ class DB_connect:
 			table=newdf.loc[i,'name'].lower()
 			sql = "Select * from " + table
 			st1=predf.loc[i,'value'].astype("int")
-			if str(newdf.loc[i,'value'])=='None':
-				newdf.loc[i,'value']=pd.NA
 			st2=newdf.loc[i,'value'].astype("int")
+			# if not pd.isnull(newdf.loc[i,'value']):
+				# st2=newdf.loc[i,'value'].astype("int")
+			
 			if st1!=st2:
 				#print(table,st1,st2,'not equal')
 				#print(newdf.iloc[i,1:])
