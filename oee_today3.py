@@ -39,10 +39,8 @@
 #3.設備使用率
 #公式:設備使用率=實際機時/(製程機台數*24小時)
 # -------------------------------------------------------------------
-from sqlite3 import Date
 import time
 import threading
-from turtle import goto
 import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
