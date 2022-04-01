@@ -47,7 +47,8 @@ from datetime import timedelta
 from datetime import datetime
 VALUE_OF_PLAN_ST =1
 VALUE_OF_PLAN_ED =2
-DAY_SHIFT=timedelta(hours=8)
+DAY_SHIFT=timedelta(days=-1)
+DAY_START= datetime.min.time().replace(hour=8)
 
 class OEE_Class:
 	machine = ''
@@ -255,8 +256,8 @@ class DB_connect:
 		with open ("dbconfig.txt", "r") as dbconfig:
 			data=dbconfig.readlines()
 		self.__engine=sqla.create_engine('mysql+mysqlconnector://'+data[0])
-		self.today_min=datetime.combine(datetime.today().date(),datetime.min.time()) - DAY_SHIFT
-		self.today_max=datetime.combine(datetime.today().date(),datetime.max.time())- DAY_SHIFT
+		self.today_min=datetime.combine(datetime.today().date(),DAY_START) - DAY_SHIFT 
+		self.today_max=self.today_min + timedelta(days=1)
 		
 	def read_schedule(self,name,seldf):
 		rest= timedelta(0)
@@ -267,6 +268,7 @@ class DB_connect:
 		global VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED
 		today_min=self.today_min
 		today_max=self.today_max
+		print(today_min,today_max)
 		if schdf.empty:
 			init=[
 				[today_min.replace(hour=8),name,VALUE_OF_PLAN_ST,'morning'],#morning
@@ -280,41 +282,61 @@ class DB_connect:
 				]
 			schdf=pd.DataFrame(init,columns=['date', 'name', 'value','raw_by'])
 			# 新增至資料庫 and reload
-			schdf.to_sql(table, self.__engine, if_exists='append', index=False)
-			schdf = pd.read_sql_query(sql, self.__engine)
+			# schdf.to_sql(table, self.__engine, if_exists='append', index=False)
+			# schdf = pd.read_sql_query(sql, self.__engine)
+		print('test schdf-------------------------------------------------')
+		print(schdf)
 			
-		check_befor=today_min.replace(hour=8)
-		check_after=today_min.replace(hour=17,minute=30)
-		chk_bf_df=seldf[seldf.date < check_befor]
-		mask=(seldf['date'] > today_min.replace(hour=8)) & (seldf['date'] <= today_min.replace(hour=12))
-		chk_morring_df=seldf.loc[mask]
-		mask=(seldf['date'] > today_min.replace(hour=12)) & (seldf['date'] <= today_min.replace(hour=13))
-		chk_noon_df=seldf.loc[mask]
-		mask=(seldf['date'] > today_min.replace(hour=13)) & (seldf['date'] <= today_min.replace(hour=17))
-		chk_afternoon_df=seldf.loc[mask]
-		mask=(seldf['date'] > today_min.replace(hour=17)) & (seldf['date'] <= today_min.replace(hour=17,minute=30))
-		chk_night_df=seldf.loc[mask]
-		mask=(seldf['date'] > check_befor) & (seldf['date'] <= today_min.replace(hour=17))
-		chk_work_df=seldf.loc[mask]
-		chk_af_df=seldf[seldf.date >= check_after]
-		print(chk_bf_df)
-		if not chk_bf_df[chk_bf_df.value==1].empty:
-			id1=min(chk_bf_df[chk_bf_df.value==1].index)
-			id2=max(chk_bf_df[chk_bf_df.value==1].index)
-			start=seldf.loc[id1,'date'].replace(minute=0,second=0,microsecond=0)
-			if start==today_min:
-				schdf.loc[schdf.raw_by=='first','value']=VALUE_OF_PLAN_ST
-			end=seldf.shift(-1).loc[id2,'date']
+		# Define check time
+		chk8 = today_min
+		chk12 = today_min.replace(hour=12)
+		chk13 = today_min.replace(hour=13)
+		chk17 = today_min.replace(hour=17)
+		chk1730 = today_min.replace(hour=17,minute=30)
+		chk24 = today_max.replace(hour=0)
+		chkmax = today_max
+		# chkls=[chk8,chk12,chk13,chk17,chk1730,chk24,chkmax]
+		# print(pd.DataFrame(chkls))
+
+		# plan today flag
+		plan_flag=0
+		# morring
+		mask=(seldf['date'] > chk8 ) & (seldf['date'] <= chk12 )
+		morring_df=seldf.loc[mask]
+		# noon_rest
+		mask=(seldf['date'] > chk12 ) & (seldf['date'] <= chk13 )
+		noon_df=seldf.loc[mask]
+		# afternoon
+		mask=(seldf['date'] > chk13 ) & (seldf['date'] <= chk17 )
+		afternoon_df=seldf.loc[mask]
+		# dusk
+		mask=(seldf['date'] > chk17 ) & (seldf['date'] <= chk1730 )
+		dusk_df=seldf.loc[mask]
+		# night
+		mask=(seldf['date'] > chk17 ) & (seldf['date'] <= chk24 )
+		night_df=seldf.loc[mask]
+		#midnight
+		mask=(seldf['date'] > chk24 ) & (seldf['date'] <= chkmax )
+		midnight_df=seldf.loc[mask]
+
+		print(morring_df)
+		if morring_df.empty:
+			plan_flag=0
+		elif not morring_df[morring_df.value==1].empty:
+			plan_flag=1
+			id2=max(morring_df[morring_df.value==1].index)
+			start=chk8
+			end=chk12
 			end_status=VALUE_OF_PLAN_ED
-			if end < check_befor:
+			if end < today_min:
 				end=end.replace(minute=0,second=0,microsecond=0) + timedelta(hours=1)
-			elif end >= check_befor:
-				end=check_befor
+			elif end >= today_min:
+				end=today_min
 				end_status=VALUE_OF_PLAN_ST # still start
 			else:# pd.isnull(end):
 				end=seldf.loc[id2,'date'].replace(minute=00,second=0,microsecond=0) + timedelta(hours=1)
 
-			print('over time',start,end)
+			print('morring time',start,end)
 			ls=[[start, VALUE_OF_PLAN_ST],[end, end_status]]
 			updf=pd.DataFrame(ls,columns=['date', 'value'])
 			updf.index=schdf.loc[schdf.raw_by=='midnight',['date', 'value']].index
@@ -373,18 +395,41 @@ class DB_connect:
 			updf.index=schdf.loc[schdf.raw_by=='night',['date', 'value']].index
 			schdf.loc[schdf.raw_by=='night',['date', 'value']]=updf
 		
+		print(midnight_df)
+		if not chk_bf_df[chk_bf_df.value==1].empty:
+			id1=min(chk_bf_df[chk_bf_df.value==1].index)
+			id2=max(chk_bf_df[chk_bf_df.value==1].index)
+			start=seldf.loc[id1,'date'].replace(minute=0,second=0,microsecond=0)
+			if start==today_min:
+				schdf.loc[schdf.raw_by=='first','value']=VALUE_OF_PLAN_ST
+			end=seldf.shift(-1).loc[id2,'date']
+			end_status=VALUE_OF_PLAN_ED
+			if end < today_min:
+				end=end.replace(minute=0,second=0,microsecond=0) + timedelta(hours=1)
+			elif end >= today_min:
+				end=today_min
+				end_status=VALUE_OF_PLAN_ST # still start
+			else:# pd.isnull(end):
+				end=seldf.loc[id2,'date'].replace(minute=00,second=0,microsecond=0) + timedelta(hours=1)
+
+			print('over time',start,end)
+			ls=[[start, VALUE_OF_PLAN_ST],[end, end_status]]
+			updf=pd.DataFrame(ls,columns=['date', 'value'])
+			updf.index=schdf.loc[schdf.raw_by=='midnight',['date', 'value']].index
+			schdf.loc[schdf.raw_by=='midnight',['date', 'value']]=updf
+
 		# update to database
-		if len(schdf)>0:
-			with self.__engine.connect() as cnn:
-				for i in range(len(schdf)):
-					sql = f"""
-UPDATE {table}
-SET date='{schdf.loc[i,'date']}',
-value={schdf.loc[i,'value']}
-WHERE id ={schdf.loc[i,'id']};
-"""
-					# print(sql)
-					cnn.execute(sql)
+# 		if len(schdf)>0:
+# 			with self.__engine.connect() as cnn:
+# 				for i in range(len(schdf)):
+# 					sql = f"""
+# UPDATE {table}
+# SET date='{schdf.loc[i,'date']}',
+# value={schdf.loc[i,'value']}
+# WHERE id ={schdf.loc[i,'id']};
+# """
+# 					# print(sql)
+# 					cnn.execute(sql)
 		print('read schedule_raw database %s cost % sec' %(name,(time.time()-allst)))
 		return schdf,rest
 
@@ -412,7 +457,6 @@ WHERE id ={schdf.loc[i,'id']};
 		
 	def read_from(self,name):
 		t1=time.time()
-		print(self.today_min)
 		table = name
 
 		#select ID between today
@@ -430,7 +474,8 @@ WHERE id ={schdf.loc[i,'id']};
 			#return predf.iloc[0,0:].to_dict()
 			return seldf
 		else:
-			return None
+			seldf = pd.DataFrame({},columns=['id','date','value','parts','work_order_id'])
+			return seldf
 
 	def write_to_sql(self,df,table):
 		sql = 'Select * from ' + table
@@ -490,7 +535,7 @@ if __name__ == '__main__':
 		piedf=pd.DataFrame()
 		for i in range(len(machine)):
 			conn = DB_connect()
-			conn.reduce_data(machine[i])
+			# conn.reduce_data(machine[i])
 			
 			seldf = conn.read_from(machine[i])
 			seldf.sort_values(by=['date'],inplace=True)
@@ -517,9 +562,9 @@ if __name__ == '__main__':
 		print(oeedf)
 		print(piedf)
 		#print(oeedf.iloc[0,0:])
-		conn.write_to_sql(oeedf,'oee')
-		piedf=piedf.replace('NA',pd.NA)
-		conn.write_to_sql(piedf,'pie')
+		# conn.write_to_sql(oeedf,'oee')
+		# piedf=piedf.replace('NA',pd.NA)
+		# conn.write_to_sql(piedf,'pie')
 
 		alled = time.time()
 		# 列印結果
