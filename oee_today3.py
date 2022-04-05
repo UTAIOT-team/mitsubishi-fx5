@@ -299,7 +299,7 @@ class DB_connect:
 		chk13 = today_min.replace(hour=13) - CHK_TOLERANCE
 		chk17 = today_min.replace(hour=17) + CHK_TOLERANCE
 		chk1730 = today_min.replace(hour=17,minute=30) - CHK_TOLERANCE
-		# chk18 = today_min.replace(hour=18)
+		chk1830 = today_min.replace(hour=18,minute=30)
 		chk2330 = today_min.replace(hour=23,minute=30)
 		chk24 = today_max.replace(hour=0) 
 		chkmax = today_max - CHK_TOLERANCE
@@ -333,9 +333,12 @@ class DB_connect:
 		print(morring_df)
 		if morring_df.empty:
 			plan_flag=0
+			morring=timedelta(0)
 			schdf.value=VALUE_OF_PLAN_ED
-		elif not morring_df[morring_df.value==1].empty:
+		# elif not morring_df[morring_df.value==1].empty:
+		else:
 			plan_flag=1
+			morring=timedelta(hours=8)
 
 		print(plan_flag)
 		if plan_flag != 0:
@@ -345,8 +348,10 @@ class DB_connect:
 			print(start,end)
 			print(noon_df)
 			if morring_df['value'].iloc[-1]==1:
+				morring+=timedelta(hours=1)
 				schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
 			elif not noon_df[noon_df.value==1].empty:
+				morring+=timedelta(hours=1)
 				schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
 			else:
 				rest+=timedelta(hours=1)
@@ -359,11 +364,14 @@ class DB_connect:
 			print(start,end)
 			print(dusk_df)
 			print(noon_df)
-			if afternoon_df['value'].iloc[-1]==1:
+			dusk=timedelta(0)
+			if afternoon_df['value'].iloc[-1]==1 and not dusk_df.empty:
+				dusk=timedelta(minutes=30)
 				schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
 			elif not dusk_df[dusk_df.value==1].empty:
+				dusk=timedelta(minutes=30)
 				schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
-			else:	
+			else:		
 				rest+=timedelta(minutes=30)
 				schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 
@@ -372,11 +380,13 @@ class DB_connect:
 			end=chk24
 			print(start,end)
 			print(night_df)
-			if night_df.empty:
-				# update night
-				schdf.loc[schdf.raw_by=='night','date']=(start + CHK_TOLERANCE, start + CHK_TOLERANCE )
-				schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
-			elif not night_df[night_df.value==1].empty:
+			night=timedelta(0)
+			# if night_df.empty:
+			# 	# update night
+			# 	schdf.loc[schdf.raw_by=='night','date']=(start + CHK_TOLERANCE, start + CHK_TOLERANCE )
+			# 	schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+			# elif not night_df[night_df.value==1].empty:
+			if not night_df[night_df.value==1].empty:
 				id1=min(night_df[night_df.value==1].index)
 				id2=max(night_df[night_df.value==1].index)
 				start=night_df.loc[id1,'date']
@@ -385,7 +395,7 @@ class DB_connect:
 				if not pd.isnull(end):
 					if end > chk2330:
 						end = chk24 - timedelta(1)
-					elif end <= end.replace(minute=30,second=0,microsecond=0) + CHK_TOLERANCE:
+					elif end <= end.replace(minute=30,second=0,microsecond=0) + CHK_TOLERANCE:	
 						end=end.replace(minute=30,second=0,microsecond=0)
 					else:
 						end=end.replace(minute=30,second=0,microsecond=0) + timedelta(hours=1)
@@ -394,17 +404,26 @@ class DB_connect:
 				
 				print(dusk_df.empty)
 				# update dusk
-				if dusk_df.empty:
-					if afternoon_df['value'].iloc[-1]==1:
-						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
+				# if dusk_df.empty:
+				# 	if afternoon_df['value'].iloc[-1]==1:
+				# 		schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 				
 				# update night
-				start=start.replace(minute=30,second=0,microsecond=0)
+				# start=start.replace(minute=30,second=0,microsecond=0)
+				# if start == chk1830:
+				# 	schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)	
+				# if schdf.loc[schdf.raw_by=='dusk','value'].iloc[-1]==VALUE_OF_PLAN_ST:
+				# 	night= end - (chk1730 + CHK_TOLERANCE) +dusk
+				# else:
+				# 	night=end-start+dusk
+				start = chk1730 + CHK_TOLERANCE
+				night=end-start+dusk #有晚班
 				schdf.loc[schdf.raw_by=='night','date']=(start , end )
 				schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
 
 			else:
 				# update night
+				morring += dusk #無晚班
 				schdf.loc[schdf.raw_by=='night','date']=( start + CHK_TOLERANCE, start + CHK_TOLERANCE )
 				schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 			
@@ -414,11 +433,13 @@ class DB_connect:
 			end=chkmax
 			print(start,end)
 			print(midnight_df)
-			if midnight_df.empty:
-				# update midnight
-				schdf.loc[schdf.raw_by=='midnight','date']=(start, end + CHK_TOLERANCE )
-				schdf.loc[schdf.raw_by=='midnight','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
-			elif not midnight_df[midnight_df.value==1].empty:
+			midnight=timedelta(0)
+			# if midnight_df.empty:
+			# 	# update midnight
+			# 	schdf.loc[schdf.raw_by=='midnight','date']=(start, start )
+			# 	schdf.loc[schdf.raw_by=='midnight','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+			# elif not midnight_df[midnight_df.value==1].empty:
+			if not midnight_df[midnight_df.value==1].empty:
 				id1=min(midnight_df[midnight_df.value==1].index)
 				id2=max(midnight_df[midnight_df.value==1].index)
 				start=midnight_df.loc[id1,'date'].replace(minute=0,second=0,microsecond=0)
@@ -434,6 +455,7 @@ class DB_connect:
 					schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 
 				# update midnight
+				midnight=end-start
 				schdf.loc[schdf.raw_by=='midnight','date']=(start , end )
 				schdf.loc[schdf.raw_by=='midnight','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
 
@@ -443,6 +465,10 @@ class DB_connect:
 				schdf.loc[schdf.raw_by=='midnight','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 			
 			print('rest time:',rest)
+			print('morring:',morring)
+			print('dusk:',dusk)
+			print('night:',night)
+			print('midnight:',midnight)
 			print(schdf)
 			quit()
 
