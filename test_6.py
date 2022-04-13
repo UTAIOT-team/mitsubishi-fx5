@@ -8,6 +8,7 @@
 # DB_connect: 使用class 操作資料庫讀取及寫入。
 # 讀取machine_config.xlsx 定義機台IP及收集數據欄位資料類型。
 # -------------------------------------------------------------------
+from operator import mod
 import os
 import sys
 import time
@@ -19,10 +20,23 @@ import sqlalchemy as sqla
 from sqlalchemy import update
 from datetime import datetime
 from datetime import timedelta
+NOW = datetime.today()
 
 
 def PLC_connect(name,host,reg,q,i,times):
 	res={'name':'','parts': np.nan ,'value': np.nan , 'user_id': np.nan ,'work_order_id': np.nan}
+	global NOW
+	noon_st=NOW.replace(hour=12,minute=0,second=0,microsecond=0)
+	noon_ed=noon_st.replace(hour=13)
+	dusk_st=noon_st.replace(hour=17)
+	dusk_ed=dusk_st.replace(minute=30)
+	# print(NOW,'\n',
+	# noon_st,'\n',
+	# noon_ed,'\n',
+	# dusk_st,'\n',
+	# dusk_ed
+	# )
+	# print(noon_st<=NOW<noon_ed)
 
 	try:
 		fx5 = FX5.get_connection(host)
@@ -35,13 +49,19 @@ def PLC_connect(name,host,reg,q,i,times):
 		res['work_order_id']=fx5.read(reg['WID'],reg['WID_type']) if not pd.isnull(reg['WID_type']) else 0
 		#print(res)
 		#print(times)
+		if noon_st<=NOW<noon_ed and res['value']!=1:
+			res['value']=res['value']+500
+		elif dusk_st<=NOW<dusk_ed and res['value']!=1:
+			res['value']=res['value']+500
+
 		q[i]=res
+
 
 	except OSError as err:
 		print(name, err)
 		res['name']=name
 		res['parts']=np.nan
-		res['value']=np.nan
+		res['value']=9
 		q[i]=res
 
 
@@ -65,7 +85,7 @@ class DB_connect:
 		if not iddf.empty:
 			sql = "Select * from " + table +" Where id="+iddf.iloc[0,0].astype("str")
 			predf=pd.read_sql_query(sql, self.__engine)
-			predf.drop(columns=['id','date'],inplace=True)
+			# predf.drop(columns=['id',],inplace=True)
 			#predf.columns=['parts','status','UID','WID']
 			predf.insert(0,'name',table)
 			#st1=predf.loc[0,'status'].astype("int")
@@ -77,7 +97,7 @@ class DB_connect:
 		return predf.iloc[0,0:].to_dict()
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
 
-	def write_to_sql(self,q):
+	def write_to_sql(self,q,times,tempdf):
 		print('new------------------')
 		newdf=pd.json_normalize(q)
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
@@ -93,7 +113,29 @@ class DB_connect:
 		predf=pd.json_normalize(preq)
 		predf['work_order_id']=predf['work_order_id'].astype("Int64")
 		print(predf)
-		
+		global NOW
+		if times==1:
+			tempdf['parts']=newdf['parts']
+			tempdf['date']=NOW
+			tempdf['during']=NOW-predf['date']
+			tempdf['speed']=round((newdf['parts']-predf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
+			newdf['speed']=tempdf['speed']
+			print(tempdf)
+		elif times%6==1:
+			tempdf['during']=NOW-tempdf['date']
+			print(tempdf)
+			tempdf['speed']=round((newdf['parts']-tempdf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
+			tempdf['parts']=newdf['parts']
+			tempdf['date']=NOW
+			newdf['speed']=tempdf['speed']
+			print(newdf)
+		else:
+			newdf['speed']=tempdf['speed']
+
+		# newdf['during']=datetime.today()-predf['date']
+		# newdf['speed']=round((newdf['parts']-predf['parts'])/newdf['during'].dt.total_seconds()*60,ndigits=0)
+		# print(newdf)
+		# newdf.drop(columns=['during'],inplace=True)
 
 		# add to database
 		for i in range(len(q)):
@@ -101,43 +143,23 @@ class DB_connect:
 			# print(str(newdf.iloc[i,2]),type(newdf.iloc[i,2]))
 			# None is a nan as numpy.float type
 			# if(str(newdf.iloc[i,2])!= 'nan' and str(newdf.iloc[i,2])!= 'None' ):
-			t1=time.time()
 			table=newdf.loc[i,'name'].lower()
 			sql = "Select * from " + table
-			st1=predf.loc[i,'value'].astype("int")
-			st2=newdf.loc[i,'value'].astype("int")
-			# if not pd.isnull(newdf.loc[i,'value']):
-				# st2=newdf.loc[i,'value'].astype("int")
-			
+			st1=predf.loc[i,'value']
+			st2=newdf.loc[i,'value']
+			if pd.isnull(newdf.loc[i,'parts']):
+				newdf.loc[i,'parts']=predf.loc[i,'parts']
+
 			if st1!=st2:
 				#print(table,st1,st2,'not equal')
 				#print(newdf.iloc[i,1:])
 				#resdf=newdf.iloc[[i],1:]
 				print(newdf.iloc[[i],1:])
-				t2=time.time()
-				newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
-				print(table,st1,st2,'not equal','| write to database cost time %f' % (t2-t1))
-			
+				print(table,st1,st2,'not equal','| write to database')
 			else:
-
-				# update last one id to database
-				#with engine.connect() as dbcnn:
-				#	colname=newdf.columns
-				#	qurry=[str(colname[i])+"='"+str(newdf.iloc[0,i])+"'" for i in range(len(colname))]
-				#	print(qurry)
-				#	sql = f"""
-				#	UPDATE {table}
-				#	SET {','.join(qurry)}
-				#	WHERE {"id="+iddf.iloc[0,0].astype("str")};
-				#	"""
-				#	dbcnn.execute(sql)
-				#print(table,st1,st2,'is equal')
-				#resdf=newdf.iloc[[i],1:]
-				#print(newdf.iloc[[i],1:])
-				newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
-				t2=time.time()
-				print(table,st1,st2,'is equal','| write to database cost time %f' % (t2-t1))
-				
+				print(table,st1,st2,'is equal','| write to database')
+			newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
+		return tempdf
 
 
 if __name__ == '__main__':
@@ -156,11 +178,13 @@ if __name__ == '__main__':
 	times=0
 	n=len(machinedf)
 	q = [{} for _ in range(n)]
+	tempdf=pd.DataFrame({},columns=['date','parts','during'])
 	
 	while True:
 		allst=time.time()
 		times += 1
-		
+		NOW=datetime.today()
+		print(NOW)
 		threads=[]
 		reg = {}
 		for i in range(n):
@@ -185,8 +209,9 @@ if __name__ == '__main__':
 		df['parts']=df['parts'].astype("Int64")
 		print(df)
 		conn = DB_connect()
-		if times > 1: #第一次連線值不紀錄
-			conn.write_to_sql(q)
+		# if times > 5: #第一次連線值不紀錄
+		tempdf = conn.write_to_sql(q,times,tempdf)
+		print(tempdf)
 		
 		print(datetime.now())
 		print('done all cost time %f' % (time.time()-allst))

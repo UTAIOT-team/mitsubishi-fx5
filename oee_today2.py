@@ -479,9 +479,9 @@ if __name__ == '__main__':
 			conn.reduce_data(machine[i])
 			
 			seldf = conn.read_from(machine[i])
-			seldf.sort_values(by=['date'],inplace=True)
-			seldf.reset_index(drop=True,inplace=True)
 			if seldf is not None:
+				seldf.sort_values(by=['date'],inplace=True)
+				seldf.reset_index(drop=True,inplace=True)
 				name=machine[i]
 				schdf, rest = conn.read_schedule(name,seldf)
 				
