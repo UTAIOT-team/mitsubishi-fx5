@@ -51,7 +51,7 @@ DAY_START= datetime.min.time().replace(hour=8)
 CHK_TOLERANCE = timedelta(minutes=5)
 NOW=datetime.today()
 
-# test_date = datetime(2022,4,19,2,25,0)
+# test_date = datetime(2022,5,4,7,25,0)
 # NOW=test_date
 
 class OEE_Class:
@@ -91,35 +91,16 @@ class OEE_Class:
 		
 		# 2^32溢位問題排除
 		if seldf.parts.max() > 2**32-10**7:
-			over_max=seldf[seldf.parts>2**31].max().fillna(0)
-			over_min=seldf[seldf.parts>2**31].min().fillna(0)
-			below_max=seldf[seldf.parts<=2**31].max().fillna(0)
-			below_min=seldf[seldf.parts<=2**31].min().fillna(0)
+			over_max=seldf[(seldf.parts>2**31) & (seldf.value!=9)].parts.max().fillna(0)
+			over_min=seldf[(seldf.parts>2**31) & (seldf.value!=9)].parts.min().fillna(0)
+			below_max=seldf[(seldf.parts<=2**31) & (seldf.value!=9)].parts.max().fillna(0)
+			below_min=seldf[(seldf.parts<=2**31) & (seldf.value!=9)].parts.min().fillna(0)
 			self.actual_pcs = over_max-over_min + below_max - below_min
 		else:
-			self.actual_pcs = seldf["parts"].max()-seldf["parts"].min() # 2^32溢位問題須排除
+			self.actual_pcs = seldf[seldf.value!=9].parts.max()-seldf[seldf.value!=9].parts.min() # 2^32溢位問題須排除
 		
 		morning=schdf[schdf.raw_by=='morning'].date.min()
 		last = schdf[schdf.raw_by=='pre_last'].date.max()
-		# dusk_st=schdf[schdf.raw_by=='dusk'].date.min()
-		# dusk_ed=schdf[schdf.raw_by=='dusk'].date.max()
-		# night_st=schdf[schdf.raw_by=='night'].date.min()
-		# night_ed=schdf[schdf.raw_by=='night'].date.max()
-		# midnight_st=schdf[schdf.raw_by=='midnight'].date.min()
-		# midnight_ed=schdf[schdf.raw_by=='midnight'].date.max()
-		
-		
-		# seldf not empty in main
-		
-		# last = seldf.date.max()
-		# if not schdf[(schdf.raw_by=='midnight') & (schdf.value==1)].empty:
-		# 	last=midnight_ed
-		# elif not schdf[(schdf.raw_by=='night') & (schdf.value==1)].empty:
-		# 	last=night_ed
-		# elif not schdf[(schdf.raw_by=='dusk') & (schdf.value==1)].empty:
-		# 	last=dusk_ed
-		# else:
-		# 	last=dusk_st
 
 		st_dt = morning
 		end_dt=last if self.now > last else self.now
@@ -157,7 +138,7 @@ class OEE_Class:
 		print('nomal_time ,total_time----------------------------------------------------------')
 		print(work_time.groupby(['status'])['during'].agg('sum').reset_index())
 		print('during_sum',work_time.during.agg('sum'))
-		mask=(work_time['status'] > 1 ) & (work_time['status'] < 500 )
+		mask=(work_time['status'] != 1 ) & (work_time['status'] < 500 )
 		print('alarm_sum',work_time.loc[mask].during.agg('sum'))
 		rest=work_time[work_time.status>=500].during.agg('sum')
 		self.total_time = end_dt-st_dt
@@ -256,17 +237,17 @@ class OEE_Class:
 		oeedf['total_time']=self.total_time.total_seconds()
 		oeedf['standard_pcs']=self.standard_pcs
 		oeedf['actual_pcs']=self.actual_pcs
-		oeedf['tf']=self.piedf[(self.piedf.status>1) & (self.piedf.status < 500)].during.sum()
-		oeedf['ft']=self.piedf[(self.piedf.status>1) & (self.piedf.status < 500)].times.sum()
+		oeedf['ttr']=self.piedf[(self.piedf.status!=1) & (self.piedf.status < 500)].during.sum()
+		oeedf['ft']=self.piedf[(self.piedf.status!=1) & (self.piedf.status < 500)].times.sum()
 
 
 		if oeedf.loc[0,'ft']!=0:
-			oeedf['mtbf']=(oeedf.load_time-oeedf.tf)/oeedf.ft
-			oeedf['mttr']=oeedf.tf/oeedf.ft
+			oeedf['mtbf']=(oeedf.load_time-oeedf.ttr)/oeedf.ft
+			oeedf['mttr']=oeedf.ttr/oeedf.ft
 		else:
 			oeedf['mtbf']=0
 			oeedf['mttr']=0
-		print(oeedf.loc[0,['ft','tf','Production','total_time','mtbf','mttr']])
+		print(oeedf.loc[0,['ft','ttr','Production','total_time','mtbf','mttr']])
 		return oeedf
 
 	def __alarm_analyze(self):
@@ -343,7 +324,7 @@ class DB_connect:
 			print(schdf)
 			
 		# Define check time
-		chk8 = today_min - CHK_TOLERANCE
+		chk8 = today_min
 		chk12 = today_min.replace(hour=12) + CHK_TOLERANCE
 		chk13 = today_min.replace(hour=13) - CHK_TOLERANCE
 		chk17 = today_min.replace(hour=17) + CHK_TOLERANCE
@@ -351,29 +332,29 @@ class DB_connect:
 		chk1830 = today_min.replace(hour=18,minute=30)
 		chk2330 = today_min.replace(hour=23,minute=30)
 		chk24 = today_max.replace(hour=0) 
-		chkmax = today_max - CHK_TOLERANCE
+		chkmax = today_max
 		# chkls=[chk8,chk12,chk13,chk17,chk1730,chk24,chkmax]
 		# print(pd.DataFrame(chkls))
 
 		# plan today flag
 		plan_flag=0
 		# morning
-		mask=(seldf['date'] > chk8 ) & (seldf['date'] <= chk12 )
+		mask=(seldf['date'] > chk8 ) & (seldf['date'] < chk12 )
 		morning_df=seldf.loc[mask]
 		# noon_rest
-		mask=(seldf['date'] > chk12 ) & (seldf['date'] <= chk13 )
+		mask=(seldf['date'] >= chk12 ) & (seldf['date'] < chk13 )
 		noon_df=seldf.loc[mask]
 		# afternoon
-		mask=(seldf['date'] > chk13 ) & (seldf['date'] <= chk17 )
+		mask=(seldf['date'] >= chk13 ) & (seldf['date'] < chk17 )
 		afternoon_df=seldf.loc[mask]
 		# dusk
-		mask=(seldf['date'] > chk17 ) & (seldf['date'] <= chk1730 )
+		mask=(seldf['date'] >= chk17 ) & (seldf['date'] < chk1730 )
 		dusk_df=seldf.loc[mask]
 		# night
-		mask=(seldf['date'] > chk1730 ) & (seldf['date'] <= chk24 )
+		mask=(seldf['date'] >= chk1730 ) & (seldf['date'] < chk24 )
 		night_df=seldf.loc[mask]
 		#midnight
-		mask=(seldf['date'] > chk24 ) & (seldf['date'] <= chkmax )
+		mask=(seldf['date'] >= chk24 ) & (seldf['date'] < chkmax )
 		midnight_df=seldf.loc[mask]
 
 		start=chk8
@@ -435,16 +416,17 @@ class DB_connect:
 				dusk=self.today_now - (chk17 - CHK_TOLERANCE)
 				if dusk > timedelta(minutes=30):
 					dusk = timedelta(minutes=30)
-				if afternoon_df['value'].iloc[-1]==1 and dusk_df.empty:
-					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
-					schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
-					schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
-				elif not dusk_df[dusk_df.value==1].empty:
-					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
-					schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
-					schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
-				else:
-					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+				if not afternoon_df.empty:
+					if afternoon_df['value'].iloc[-1]==1 and dusk_df.empty:
+						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
+						schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
+						schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
+					elif not dusk_df[dusk_df.value==1].empty:
+						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
+						schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
+						schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
+					else:
+						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 
 			print('test night---------------------------------------')
 			start=chk1730
@@ -476,8 +458,9 @@ class DB_connect:
 					print(dusk_df.empty)
 					# update dusk
 					if dusk_df.empty:
-						if afternoon_df['value'].iloc[-1]==1:
-							schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
+						if not afternoon_df.empty:
+							if afternoon_df['value'].iloc[-1]==1:
+								schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 					else:
 						if dusk_df['value'].iloc[-1]==1:
 							schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
@@ -597,9 +580,9 @@ WHERE id ={schdf.loc[i,'id']};
 		# return seldf
 
 		#select ID between today
-		sql = "Select id from " + table + " where date between '" + str(self.today_min) + "' and '" + str(self.today_now) + "'"
+		sql = "Select id from " + table + " where date between '" + str(self.today_min) + "' and '" + str(self.today_max) + "'"
 		iddf = pd.read_sql_query(sql, self.__engine)
-		#print(iddf)
+		print(iddf)
 		if not iddf.empty and len(iddf) >=2 :
 			idarr=tuple(iddf['id'].astype(int).values.tolist())
 			#print(idarr)
@@ -639,12 +622,43 @@ WHERE id ={schdf.loc[i,'id']};
 			seldf['e']=seldf['shift_date']==seldf['shift_date'].shift(1)
 			seldf['f']=seldf['shift_date']==seldf['shift_date'].shift(-1)
 			seldf['g']= seldf.a & seldf.c & seldf.d & seldf.e & seldf.f
+			seldf['h']= seldf['g']!=seldf['g'].shift(-1)
 			seldf.to_csv(name + ".csv")
+
+			#update next if speed not accurate
+			mask=(seldf['g']==False) & (seldf['h']==True) & (seldf['value']==1)
+			updf=seldf.loc[mask]
+			if len(updf)>len(seldf[seldf.index.isin((seldf.loc[mask].index+1).values)].speed.values):
+				updf=updf.drop(updf.tail(1).index)
+			print(updf)
+			print(seldf[seldf.index.isin((seldf.loc[mask].index+1).values)].speed.values)
+			updf['upspeed']=seldf[seldf.index.isin((seldf.loc[mask].index+1).values)].speed.values
+			updf=updf.dropna()
+			updf=updf[updf.upspeed!=""]
+			updf=updf[updf.speed<updf.upspeed]
 			seldf=seldf.loc[seldf['g']==True]
 			print(seldf)
-			#return 0
+			print('updf')
+			print(updf)
+
+			# update to database
+			updf=updf.reset_index()
+			if len(updf)>0:
+				with self.__engine.connect() as cnn:
+					for i in range(len(updf)):
+						sql = f"""
+UPDATE {table}
+SET speed={updf.loc[i,'upspeed']}
+WHERE id ={updf.loc[i,'id']};
+"""
+						print(sql)
+						cnn.execute(sql)
+			
 		
 		if len(seldf)>0:
+			up_idarr=0
+			del_idarr=0
+
 			idarr='(' + str(seldf['id'].astype(int).values[0]) + ')' if len(seldf) <2 \
 				else tuple(seldf['id'].astype(int).values.tolist())
 			print(idarr)
@@ -664,7 +678,7 @@ if __name__ == '__main__':
 	allst=time.time()
 	# read from machine config
 	machinedf=pd.read_excel("machine_config.xlsx")
-	machinedf.columns=['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type']
+	machinedf.columns=['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type','option1','op_type1','option2','op_type2']
 	machine = machinedf['name'].values.tolist()
 	print(machine)
 	print(time.time()-allst)
@@ -675,9 +689,10 @@ if __name__ == '__main__':
 		piedf=pd.DataFrame()
 		NOW=datetime.today()
 		for i in range(len(machine)):
-		# for i in range(1,2):
+		# for i in range(0,1):
 			conn = DB_connect()
-			conn.reduce_data(machine[i])
+			if i!=0:
+				conn.reduce_data(machine[i])
 			seldf = conn.read_from(machine[i])
 			# if seldf is not None:
 			if not seldf.empty:
@@ -699,8 +714,11 @@ if __name__ == '__main__':
 				t2=time.time()
 				print('calc standard cost %f sec' %(t2-t1))
 				#print(oee.standard_pcs)
-				oeedf = oeedf.append(oee.calc_OEE())
-				piedf = piedf.append(oee.piedf)
+				oeedf = pd.concat([oeedf,oee.calc_OEE()])
+				piedf = pd.concat([piedf,oee.piedf])
+				# piedf = piedf.append(oee.piedf)
+				
+
 		print(oeedf)
 		print(piedf)
 		piedf=piedf.replace('NA',pd.NA)

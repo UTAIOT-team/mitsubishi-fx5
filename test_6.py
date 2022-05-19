@@ -47,6 +47,8 @@ def PLC_connect(name,host,reg,q,i,times):
 		res['value']=fx5.read(reg['status'],reg['status_type']) if not pd.isnull(reg['status_type']) else 0
 		res['user_id']=fx5.read(reg['UID'],reg['UID_type']) if not pd.isnull(reg['UID_type']) else 0
 		res['work_order_id']=fx5.read(reg['WID'],reg['WID_type']) if not pd.isnull(reg['WID_type']) else 0
+		res['option1']=fx5.read(reg['option1'],reg['op_type1']) if not pd.isnull(reg['op_type1']) else 0
+		res['option2']=fx5.read(reg['option2'],reg['op_type2']) if not pd.isnull(reg['op_type2']) else 0
 		#print(res)
 		#print(times)
 		if noon_st<=NOW<noon_ed and res['value']!=1:
@@ -61,7 +63,12 @@ def PLC_connect(name,host,reg,q,i,times):
 		print(name, err)
 		res['name']=name
 		res['parts']=np.nan
-		res['value']=9
+		if noon_st<=NOW<noon_ed:
+			res['value']=509
+		elif dusk_st<=NOW<dusk_ed:
+			res['value']=509
+		else:
+			res['value']=9
 		q[i]=res
 
 
@@ -92,7 +99,7 @@ class DB_connect:
 		else:
 			#can't find id
 			#st1=None
-			predf=pd.DataFrame([{'name':name, 'parts':np.nan, 'value':np.nan, 'user_id':np.nan, 'work_order_id':np.nan}])
+			predf=pd.DataFrame([{'name':name, 'parts':np.nan, 'value':np.nan, 'user_id':np.nan, 'work_order_id':np.nan, 'option1':np.nan, 'option2':np.nan}])
 		t2=time.time()
 		return predf.iloc[0,0:].to_dict()
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
@@ -114,13 +121,29 @@ class DB_connect:
 		predf['work_order_id']=predf['work_order_id'].astype("Int64")
 		print(predf)
 		global NOW
-		if times==1:
-			tempdf['parts']=newdf['parts']
-			tempdf['date']=NOW
-			tempdf['during']=NOW-predf['date']
-			tempdf['speed']=round((newdf['parts']-predf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
-			newdf['speed']=tempdf['speed']
+		print(tempdf.speed.eq(0).all())
+		print(tempdf.speed.eq(0).any())
+		if times==1 or tempdf.speed.eq(0).any():
+			if tempdf.speed.eq(0).all():
+				tempdf['name']=newdf['name']
+				tempdf['parts']=newdf['parts']
+				tempdf['date']=NOW
+				tempdf['during']=NOW-predf['date']
+				tempdf['speed']=round((newdf['parts']-predf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
+				newdf['speed']=tempdf['speed']
+			else:
+				for i in range(len(tempdf)):
+					if not tempdf.loc[i,'speed']>0:
+						print(tempdf.loc[i,['name','speed']])
+						tempdf.loc[i,'parts']=newdf.loc[i,'parts']
+						tempdf.loc[i,'date']=NOW
+						tempdf.loc[i,'during']=NOW-predf.loc[i,'date']
+						tempdf.loc[i,'speed']=round((newdf.loc[i,'parts']-predf.loc[i,'parts'])/tempdf.loc[i,'during'].total_seconds()*60,ndigits=0)
+						newdf.loc[i,'speed']=tempdf.loc[i,'speed']
+			print('tempdf')
 			print(tempdf)
+
+			
 		elif times%6==1:
 			tempdf['during']=NOW-tempdf['date']
 			print(tempdf)
@@ -168,7 +191,7 @@ if __name__ == '__main__':
 	# read from machine config
 	machinedf=pd.read_excel("machine_config.xlsx")
 	print(time.time()-allst)
-	machinedf.columns=['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type']
+	machinedf.columns=['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type','option1','op_type1','option2','op_type2']
 	#machinedf.fillna('NaN',inplace=True)
 	#machinedf=machinedf.convert_dtypes()
 	
@@ -178,7 +201,7 @@ if __name__ == '__main__':
 	times=0
 	n=len(machinedf)
 	q = [{} for _ in range(n)]
-	tempdf=pd.DataFrame({},columns=['date','parts','during'])
+	tempdf=pd.DataFrame({},columns=['name','date','parts','during','speed'])
 	
 	while True:
 		allst=time.time()
@@ -209,7 +232,6 @@ if __name__ == '__main__':
 		df['parts']=df['parts'].astype("Int64")
 		print(df)
 		conn = DB_connect()
-		# if times > 5: #第一次連線值不紀錄
 		tempdf = conn.write_to_sql(q,times,tempdf)
 		print(tempdf)
 		
