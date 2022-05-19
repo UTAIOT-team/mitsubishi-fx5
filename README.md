@@ -1,3 +1,25 @@
+# ubuntu Autostarting a python3 script
+    $sudo vim /lib/systemd/system/rc-local.service
+
+    # add these in the end
+    [Install]
+    WantedBy=multi-user.target
+    Alias=rc-local.service
+
+    $sudo vim /etc/rc.local
+    
+    #!/bin/sh -e
+
+    cd /path.../mitsubishi-fx5/
+    python3 test_6.py &
+    python3 oee_today3.py &
+
+    exit 0
+
+    $sudo systemctl enable rc-local.service
+    $sudo systemctl start rc-local.service
+    $sudo systemctl status rc-local.service
+    
 # mitsubishi-fx5
 三菱FX5シーケンサを操作するPythonのサンプルです。
 
