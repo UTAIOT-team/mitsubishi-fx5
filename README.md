@@ -1,4 +1,5 @@
 # ubuntu Autostarting a python3 script
+    $sudo pip install -r requirement.txt
     $sudo vim /lib/systemd/system/rc-local.service
 
     # add these in the end
@@ -19,7 +20,7 @@
     $sudo systemctl enable rc-local.service
     $sudo systemctl start rc-local.service
     $sudo systemctl status rc-local.service
-    
+
 # mitsubishi-fx5
 三菱FX5シーケンサを操作するPythonのサンプルです。
 
