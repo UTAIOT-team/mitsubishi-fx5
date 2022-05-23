@@ -49,10 +49,10 @@ VALUE_OF_PLAN_ST =1
 VALUE_OF_PLAN_ED =2
 DAY_START= datetime.min.time().replace(hour=8)
 CHK_TOLERANCE = timedelta(minutes=5)
-NOW=datetime.today()
+# NOW=datetime.today()
 
-# test_date = datetime(2022,5,4,7,25,0)
-# NOW=test_date
+test_date = datetime(2022,5,21,7,25,0)
+NOW=test_date
 
 class OEE_Class:
 	machine = ''
@@ -378,6 +378,16 @@ class DB_connect:
 			schdf.loc[schdf.raw_by=='afternoon','value']=VALUE_OF_PLAN_ST
 			schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
 			schdf.loc[schdf.raw_by=='pre_last','date']=chk17 - CHK_TOLERANCE
+		elif not afternoon_df[afternoon_df.value==1].empty:
+			plan_flag=1
+			id=afternoon_df[afternoon_df.value==1].index.values.tolist()[0]
+			during=chk17 - CHK_TOLERANCE-afternoon_df.loc[id,'date'].replace(minute=0,second=0,microsecond=0)
+			morning=during
+			schdf.loc[schdf.raw_by=='morning','value']=VALUE_OF_PLAN_ED
+			schdf.loc[schdf.raw_by=='afternoon','value']=VALUE_OF_PLAN_ST
+			schdf.loc[schdf.raw_by=='afternoon','date']=afternoon_df.loc[id,'date'].replace(minute=0,second=0,microsecond=0)
+			schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
+			schdf.loc[schdf.raw_by=='pre_last','date']=chk17 - CHK_TOLERANCE
 		else:
 			plan_flag=0
 			morning=timedelta(0)
@@ -687,9 +697,9 @@ if __name__ == '__main__':
 		allst = time.time()
 		oeedf=pd.DataFrame()
 		piedf=pd.DataFrame()
-		NOW=datetime.today()
-		for i in range(len(machine)):
-		# for i in range(0,1):
+		# NOW=datetime.today()
+		# for i in range(len(machine)):
+		for i in range(2,3):
 			conn = DB_connect()
 			if i!=0:
 				conn.reduce_data(machine[i])
