@@ -21,6 +21,10 @@
     $sudo systemctl start rc-local.service
     $sudo systemctl status rc-local.service
 
+    # update git for linux
+    $git reset --hard
+    $git pull
+
 # mitsubishi-fx5
 三菱FX5シーケンサを操作するPythonのサンプルです。
 
