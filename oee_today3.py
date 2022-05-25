@@ -51,7 +51,7 @@ DAY_START= datetime.min.time().replace(hour=8)
 CHK_TOLERANCE = timedelta(minutes=5)
 NOW=datetime.today()
 
-# test_date = datetime(2022,5,21,7,25,0)
+# test_date = datetime(2022,5,25,7,25,0)
 # NOW=test_date
 
 class OEE_Class:
@@ -426,17 +426,12 @@ class DB_connect:
 				dusk=self.today_now - (chk17 - CHK_TOLERANCE)
 				if dusk > timedelta(minutes=30):
 					dusk = timedelta(minutes=30)
-				if not afternoon_df.empty:
-					if afternoon_df['value'].iloc[-1]==1 and dusk_df.empty:
-						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
-						schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
-						schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
-					elif not dusk_df[dusk_df.value==1].empty:
-						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
-						schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
-						schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
-					else:
-						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+				if (afternoon_df.value.tail(1).eq(1).any() and dusk_df.empty) or (not dusk_df[dusk_df.value==1].empty):
+					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
+					schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
+					schdf.loc[schdf.raw_by=='pre_last','date']=chk1730 + CHK_TOLERANCE
+				else:
+					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 
 			print('test night---------------------------------------')
 			start=chk1730
@@ -445,12 +440,17 @@ class DB_connect:
 			print(night_df)
 			night=timedelta(0)
 			if not night_df.empty:
-				if not night_df[night_df.value==1].empty:
-					id1=min(night_df[night_df.value==1].index)
-					id2=max(night_df[night_df.value==1].index)
-					start=night_df.loc[id1,'date']
-					end=seldf.shift(-1).loc[id2,'date']
-					print(end)
+				if not night_df[night_df.value==1].empty \
+				or (night_df[night_df.value==1].empty and (dusk_df.value.tail(1).eq(1).any())) \
+				or (night_df[night_df.value==1].empty and (afternoon_df.value.tail(1).eq(1).any() and dusk_df.empty)):
+					# id1=min(night_df[night_df.value==1].index)
+					# start=night_df.loc[id1,'date']
+					if not night_df[night_df.value==1].empty:
+						id2=max(night_df[night_df.value==1].index)
+						end=seldf.shift(-1).loc[id2,'date']
+					else:
+						id2=night_df.head(1).index[0]
+						end = night_df.loc[id2,'date']
 					if not pd.isnull(end):
 						if end > chk2330:
 							end = chk24 - timedelta(seconds=1)
@@ -464,18 +464,12 @@ class DB_connect:
 							end=end.replace(minute=30,second=0,microsecond=0) 
 						else:
 							end=end.replace(minute=30,second=0,microsecond=0) + timedelta(hours=1)
-					
-					print(dusk_df.empty)
-					# update dusk
-					if dusk_df.empty:
-						if not afternoon_df.empty:
-							if afternoon_df['value'].iloc[-1]==1:
-								schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
-					else:
-						if dusk_df['value'].iloc[-1]==1:
-							schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 
-					if dusk_df.value.eq(VALUE_OF_PLAN_ED).all():
+					# update dusk
+					if (afternoon_df.value.tail(1).eq(1).any() and dusk_df.empty) or (dusk_df.value.tail(1).eq(1).any()):
+						schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
+
+					if schdf.loc[schdf.raw_by=='dusk'].value.eq(VALUE_OF_PLAN_ED).all():
 						rest+=dusk
 						dusk=timedelta(0)
 					
@@ -519,7 +513,7 @@ class DB_connect:
 						end = midnight_df.loc[id2,'date'].replace(minute=0,second=0,microsecond=0) + timedelta(hours=1)
 
 					# update night
-					if night_df['value'].iloc[-1]==1:
+					if night_df.value.tail(1).eq(1).any():
 						schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 
 					# update midnight
@@ -699,7 +693,7 @@ if __name__ == '__main__':
 		piedf=pd.DataFrame()
 		NOW=datetime.today()
 		for i in range(len(machine)):
-		# for i in range(2,3):
+		# for i in range(2,3): # for debug
 			conn = DB_connect()
 			if i!=0:
 				conn.reduce_data(machine[i])
