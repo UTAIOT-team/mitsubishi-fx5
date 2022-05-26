@@ -20,6 +20,7 @@ import sqlalchemy as sqla
 from sqlalchemy import update
 from datetime import datetime
 from datetime import timedelta
+from ping3 import ping
 NOW = datetime.today()
 
 
@@ -63,12 +64,16 @@ def PLC_connect(name,host,reg,q,i,times):
 		print(name, err)
 		res['name']=name
 		res['parts']=np.nan
-		if noon_st<=NOW<noon_ed:
-			res['value']=509
-		elif dusk_st<=NOW<dusk_ed:
-			res['value']=509
+		chk_ping=ping(host.split(":")[0])
+		if chk_ping:
+			res['value']==np.nan
 		else:
-			res['value']=9
+			if noon_st<=NOW<noon_ed:
+				res['value']=509
+			elif dusk_st<=NOW<dusk_ed:
+				res['value']=509
+			else:
+				res['value']=9
 		q[i]=res
 
 
@@ -169,7 +174,7 @@ class DB_connect:
 			table=newdf.loc[i,'name'].lower()
 			sql = "Select * from " + table
 			st1=predf.loc[i,'value']
-			st2=newdf.loc[i,'value']
+			st2=st1 if pd.isnan(newdf.loc[i,'value']) else newdf.loc[i,'value']
 			if pd.isnull(newdf.loc[i,'parts']):
 				newdf.loc[i,'parts']=predf.loc[i,'parts']
 

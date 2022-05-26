@@ -93,14 +93,14 @@ class OEE_Class:
 		self.machine = name
 		
 		# 2^32溢位問題排除
-		if seldf.parts.max() > 2**32-10**7:
-			over_max=seldf[seldf.parts>2**31].max().fillna(0)
-			over_min=seldf[seldf.parts>2**31].min().fillna(0)
-			below_max=seldf[seldf.parts<=2**31].max().fillna(0)
-			below_min=seldf[seldf.parts<=2**31].min().fillna(0)
-			self.actual_pcs = over_max-over_min + below_max - below_min
-		else:
-			self.actual_pcs = seldf["parts"].max()-seldf["parts"].min() # 2^32溢位問題須排除
+		# if seldf.parts.max() > 2**32-10**7:
+		# 	over_max=seldf[seldf.parts>2**31].max().fillna(0)
+		# 	over_min=seldf[seldf.parts>2**31].min().fillna(0)
+		# 	below_max=seldf[seldf.parts<=2**31].max().fillna(0)
+		# 	below_min=seldf[seldf.parts<=2**31].min().fillna(0)
+		# 	self.actual_pcs = over_max-over_min + below_max - below_min
+		# else:
+		# 	self.actual_pcs = seldf["parts"].max()-seldf["parts"].min() # 2^32溢位問題須排除
 		
 		morning=schdf[schdf.raw_by=='morning'].date.min()
 		last = schdf[schdf.raw_by=='pre_last'].date.max()
@@ -152,6 +152,7 @@ class OEE_Class:
 		mask=(work_time['status'] != 1 ) & (work_time['status'] < 500 )
 		print('alarm_sum',work_time.loc[mask].during.agg('sum'))
 		rest=work_time[work_time.status>=500].during.agg('sum')
+		self.actual_pcs=work_time[work_time.parts>0].parts.agg('sum')
 		self.total_time = end_dt-st_dt
 		self.load_time = end_dt-st_dt-rest
 		print('rest',rest)
