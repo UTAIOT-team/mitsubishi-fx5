@@ -174,7 +174,7 @@ class DB_connect:
 			table=newdf.loc[i,'name'].lower()
 			sql = "Select * from " + table
 			st1=predf.loc[i,'value']
-			st2=st1 if pd.isnan(newdf.loc[i,'value']) else newdf.loc[i,'value']
+			st2=st1 if pd.isna(newdf.loc[i,'value']) else newdf.loc[i,'value']
 			if pd.isnull(newdf.loc[i,'parts']):
 				newdf.loc[i,'parts']=predf.loc[i,'parts']
 
