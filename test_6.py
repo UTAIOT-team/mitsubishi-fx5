@@ -66,7 +66,8 @@ def PLC_connect(name,host,reg,q,i,times):
 		res['parts']=np.nan
 		chk_ping=ping(host.split(":")[0])
 		if chk_ping:
-			res['value']==np.nan
+			# res['value']==np.nan
+			q[i]={}
 		else:
 			if noon_st<=NOW<noon_ed:
 				res['value']=509
@@ -74,7 +75,7 @@ def PLC_connect(name,host,reg,q,i,times):
 				res['value']=509
 			else:
 				res['value']=9
-		q[i]=res
+			q[i]=res
 
 
 
@@ -233,6 +234,7 @@ if __name__ == '__main__':
 
 		# print(q)
 		df=pd.DataFrame(q)
+		df=df.dropna(subset='name')
 		df['work_order_id']=df['work_order_id'].astype("Int64")
 		df['parts']=df['parts'].astype("Int64")
 		print(df)
