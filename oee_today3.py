@@ -695,23 +695,24 @@ if __name__ == '__main__':
 		for i in range(len(machine)):
 		# for i in range(2,3): # for debug
 			conn = DB_connect()
+			name=machine[i].lower()
 			if i!=0:
-				conn.reduce_data(machine[i])
-			seldf = conn.read_from(machine[i])
+				conn.reduce_data(name)
+			seldf = conn.read_from(name)
 			# if seldf is not None:
 			if not seldf.empty:
 				seldf.sort_values(by=['date'],inplace=True)
 				seldf.reset_index(drop=True,inplace=True)
-				name=machine[i].lower()
+				
 				schdf, rest = conn.read_schedule(name,seldf)
 				
 				print(schdf)
-				oee = OEE_Class(seldf, machine[i],rest,schdf)
+				oee = OEE_Class(seldf, name,rest,schdf)
 				#print(oee.workid)
 				
 				# 2022/03/25 cap設變
 				# workdf = conn.read_capacity(oee.workid)
-				workdf = conn.read_capacity(machine[i])
+				workdf = conn.read_capacity(name)
 				#print(workdf)
 				t1=time.time()
 				oee.calc_standrad(workdf)
