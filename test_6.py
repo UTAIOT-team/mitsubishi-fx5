@@ -217,7 +217,7 @@ if __name__ == '__main__':
 		threads=[]
 		reg = {}
 		for i in range(n):
-			name=machinedf.iloc[i,0]
+			name=machinedf.iloc[i,0].lower()
 			host=machinedf.iloc[i,1]
 			reg=machinedf.iloc[i,2:].to_dict()
 			#print(name,host,reg,times)
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 			#threads[i].join()
 
 		for i in range(n):
-			name=machinedf.iloc[i,0]
+			# name=machinedf.iloc[i,0].lower()
 			threads[i].join()
 			#print(name + '----- TestFX5 start ------')
 			#print(q[i])

@@ -702,7 +702,7 @@ if __name__ == '__main__':
 			if not seldf.empty:
 				seldf.sort_values(by=['date'],inplace=True)
 				seldf.reset_index(drop=True,inplace=True)
-				name=machine[i]
+				name=machine[i].lower()
 				schdf, rest = conn.read_schedule(name,seldf)
 				
 				print(schdf)
