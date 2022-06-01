@@ -111,6 +111,7 @@ class DB_connect:
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
 
 	def write_to_sql(self,q,times,tempdf):
+		pd.set_option('display.max_columns', None)
 		print('new------------------')
 		newdf=pd.json_normalize(q)
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
