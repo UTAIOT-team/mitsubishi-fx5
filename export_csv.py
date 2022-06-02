@@ -384,22 +384,22 @@ if __name__ == '__main__':
 	for i in range(len(machine)):
 	# for i in range(1,2):
 		conn = DB_connect()
-		seldf = conn.read_from(machine[i])
+		name=machine[i].lower()
+		seldf = conn.read_from(name)
 		print(seldf)
 		# if seldf is not None:
 		if not seldf.empty:
 			seldf.sort_values(by=['date'],inplace=True)
 			# seldf.reset_index(drop=True,inplace=True)
-			name=machine[i]
 			schdf, rest = conn.read_schedule(name)
 			
 			print(schdf)
-			oee = OEE_Class(seldf, machine[i],rest,schdf)
+			oee = OEE_Class(seldf, name,rest,schdf)
 			#print(oee.workid)
 			
 			# 2022/03/25 cap設變
 			# workdf = conn.read_capacity(oee.workid)
-			workdf = conn.read_capacity(machine[i])
+			workdf = conn.read_capacity(name)
 			#print(workdf)
 			t1=time.time()
 			oee.calc_standrad(workdf)
@@ -420,7 +420,7 @@ if __name__ == '__main__':
 			work_time[['TBF','TTR']]=work_time[['TBF','TTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
 			
 			if not os.path.exists(path):
-				pd.DataFrame({}).to_excel(path,sheet_name=machine[i])
+				pd.DataFrame({}).to_excel(path,sheet_name=name)
 
 			with pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace') as writer:
 			# with pd.ExcelWriter(engine='openpyxl', path=sys.argv[1]+'_excel_output.xlsx') as writer:
@@ -429,17 +429,17 @@ if __name__ == '__main__':
 				# 	writer.if_sheet_exists='replace'
 				# else:
 				# 	writer.mode='w'
-				# oeedf.to_excel('excel_output.xlsx',sheet_name=machine[i],engine='openpyxl')
-				# piedf.to_excel('excel_output.xlsx',sheet_name=machine[i],startrow=oeedf.shape[0],engine='openpyxl')
+				# oeedf.to_excel('excel_output.xlsx',sheet_name=name,engine='openpyxl')
+				# piedf.to_excel('excel_output.xlsx',sheet_name=name,startrow=oeedf.shape[0],engine='openpyxl')
 				
 				last=oeedf.shape[0]+2
-				oeedf.to_excel(writer,sheet_name=machine[i])
+				oeedf.to_excel(writer,sheet_name=name)
 				writer.if_sheet_exists='overlay'
-				piedf.to_excel(writer,sheet_name=machine[i],startrow=last)
+				piedf.to_excel(writer,sheet_name=name,startrow=last)
 				last+=piedf.shape[0]+2
-				work_time.to_excel(writer,sheet_name=machine[i],startrow=last)
+				work_time.to_excel(writer,sheet_name=name,startrow=last)
 
-				ws= writer.sheets[machine[i]]
+				ws= writer.sheets[name]
 				for i in range(1, ws.max_column+1):
 					ws.column_dimensions[get_column_letter(i)].bestFit = True
 					ws.column_dimensions[get_column_letter(i)].auto_size = True
