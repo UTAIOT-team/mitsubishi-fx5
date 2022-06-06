@@ -357,7 +357,7 @@ class DB_connect:
 
 if __name__ == '__main__':
 	# dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
-	dir='~/excel_output/'
+	dir='/home/uta_iot/excel_output/'
 	if len(sys.argv) >1:
 		NOW=datetime.strptime(sys.argv[1], "%Y%m%d").date()
 		path=dir+sys.argv[1]+'_excel_output.xlsx'

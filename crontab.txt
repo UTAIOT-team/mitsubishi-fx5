@@ -1,0 +1,5 @@
+00 08 * * * /home/uta_iot/github_repo/mitsubishi-fx5/dbbackup.sh
+00 13 * * * /home/uta_iot/github_repo/mitsubishi-fx5/dbbackup.sh
+00 18 * * * /home/uta_iot/github_repo/mitsubishi-fx5/dbbackup.sh
+55 07 * * * python3 /home/uta_iot/github_repo/mitsubishi-fx5/export_csv.py
+* * * * *  /home/uta_iot/github_repo/mitsubishi-fx5/chk_active.sh
