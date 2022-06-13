@@ -130,8 +130,8 @@ class DB_connect:
 		global NOW
 		print(tempdf.speed.eq(0).all())
 		print(tempdf.speed.eq(0).any())
-		if times==1 or tempdf.speed.eq(0).any():
-			if tempdf.speed.eq(0).all():
+		if times==1 or tempdf.speed.empty:
+			if tempdf.speed.empty:
 				tempdf['name']=newdf['name']
 				tempdf['parts']=newdf['parts']
 				tempdf['date']=NOW
