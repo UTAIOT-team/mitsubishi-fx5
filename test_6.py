@@ -189,7 +189,7 @@ class DB_connect:
 				print(table,st1,st2,'not equal','| write to database')
 			else:
 				print(table,st1,st2,'is equal','| write to database')
-			newdf.iloc[[i],1:].to_sql(table, self.__engine, if_exists='append', index=False)
+			newdf.iloc[[i],2:].to_sql(table, self.__engine, if_exists='append', index=False)
 		return tempdf
 
 
