@@ -110,18 +110,19 @@ class DB_connect:
 		return predf.iloc[0,0:].to_dict()
 		print('select id from database %s cost time %f' % (name,(t2-t1)))
 
-	def write_to_sql(self,q,times,tempdf):
+	def write_to_sql(self,df,times,tempdf):
 		pd.set_option('display.max_columns', None)
 		print('new------------------')
-		newdf=pd.json_normalize(q)
+		# newdf=pd.json_normalize(q)
+		newdf=df
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		print(newdf)
-		preq=[{} for _ in range(len(q))]
+		preq=[{} for _ in range(len(newdf))]
 		
 		# read last from database
 		srtt1=time.time()
-		for i in range(len(q)):
-			preq[i]=self.read_last_from(q[i]['name'])
+		for i in range(len(newdf)):
+			preq[i]=self.read_last_from(newdf.loc[i,'name'])
 
 		print('pre------------------')
 		predf=pd.json_normalize(preq)
@@ -168,8 +169,8 @@ class DB_connect:
 		# newdf.drop(columns=['during'],inplace=True)
 
 		# add to database
-		for i in range(len(q)):
-			print(q[i])
+		for i in range(len(newdf)):
+			# print(q[i])
 			# print(str(newdf.iloc[i,2]),type(newdf.iloc[i,2]))
 			# None is a nan as numpy.float type
 			# if(str(newdf.iloc[i,2])!= 'nan' and str(newdf.iloc[i,2])!= 'None' ):
@@ -236,11 +237,12 @@ if __name__ == '__main__':
 		# print(q)
 		df=pd.DataFrame(q)
 		df=df.dropna(subset='name')
+		df=df.reset_index()
 		df['work_order_id']=df['work_order_id'].astype("Int64")
 		df['parts']=df['parts'].astype("Int64")
 		print(df)
 		conn = DB_connect()
-		tempdf = conn.write_to_sql(q,times,tempdf)
+		tempdf = conn.write_to_sql(df,times,tempdf)
 		print(tempdf)
 		
 		print(datetime.now())
