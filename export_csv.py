@@ -62,6 +62,7 @@ class OEE_Class:
 	workid = None
 	work_time = None
 	A = 0
+	a = 0
 	P = 0
 	Q = 0
 	OEE = 0
@@ -212,12 +213,12 @@ class OEE_Class:
 	# def calc_standrad(self,workdf):
 	def calc_standrad(self,cap):
 		standard=0
-		during = self.load_time
+		during = self.nomal_time
 		# print(during)
 		ahour = timedelta(hours=1)
 		# print(self.work_time)
 		# print(cap)
-		standard=during/ahour*cap
+		standard=round(during/ahour*cap,0)
 		self.standard_pcs=standard
 		
 
@@ -226,8 +227,10 @@ class OEE_Class:
 		print('正常啟動:',self.nomal_time)
 		print('負荷時間:',self.load_time)
 		print('總時間:',self.total_time)
-		self.A=float(self.nomal_time/self.load_time*100) if self.load_time!=timedelta(0) else 0
-		print("稼動率",self.A,"%")
+		self.A=float(self.load_time/self.total_time*100) if self.total_time!=timedelta(0) else 0
+		self.a=float(self.nomal_time/self.load_time*100) if self.load_time!=timedelta(0) else 0
+		print("負荷時間率",self.A,"%")
+		print("稼動率",self.a,"%")
 		print("今日產能:",self.actual_pcs)
 		print("標準產能:",round(self.standard_pcs,0))
 		self.P=float(self.actual_pcs/self.standard_pcs*100) if self.standard_pcs!=0 else 0
@@ -237,10 +240,10 @@ class OEE_Class:
 		print("OEE:",self.OEE,"%")
 		print('機台速度',self.speed, 'sec/pcs')
 		
-		ls=[[self.now, self.machine, self.OEE, self.A, self.P, self.Q, self.nomal_min, self.nomal_max, self.nomal_avg,
+		ls=[[self.now, self.machine, self.OEE, self.A, self.a, self.P, self.Q, self.nomal_min, self.nomal_max, self.nomal_avg,
 			self.alarm_min, self.alarm_max, self.alarm_avg,self.speed]]
 		#print(self.nomal_min, self.nomal_max, self.nomal_avg, self.alarm_min, self.alarm_max, self.alarm_avg)
-		oeedf=pd.DataFrame(ls,columns=['date', 'name', 'OEE', 'Availability', 'Performance', 'Quality',
+		oeedf=pd.DataFrame(ls,columns=['date', 'name', 'OEE', 'Big_A', 'Availability', 'Performance', 'Quality',
 									   'nomal_min', 'nomal_max', 'nomal_avg', 'alarm_min', 'alarm_max', 'alarm_avg','speed'])
 		oeedf=oeedf.fillna(0)
 		oeedf['date']=self.now

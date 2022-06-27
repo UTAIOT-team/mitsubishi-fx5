@@ -228,10 +228,10 @@ class OEE_Class:
 		print("OEE:",self.OEE,"%")
 		print('機台速度',self.speed, 'sec/pcs')
 		
-		ls=[[self.now, self.machine, self.OEE, self.A ,self.a, self.P, self.Q, self.nomal_min, self.nomal_max, self.nomal_avg,
+		ls=[[self.now, self.machine, self.OEE, self.A, self.a, self.P, self.Q, self.nomal_min, self.nomal_max, self.nomal_avg,
 			self.alarm_min, self.alarm_max, self.alarm_avg,self.speed]]
 		#print(self.nomal_min, self.nomal_max, self.nomal_avg, self.alarm_min, self.alarm_max, self.alarm_avg)
-		oeedf=pd.DataFrame(ls,columns=['date', 'name', 'OEE', 'Big_A','Availability', 'Performance', 'Quality',
+		oeedf=pd.DataFrame(ls,columns=['date', 'name', 'OEE', 'Big_A', 'Availability', 'Performance', 'Quality',
 									   'nomal_min', 'nomal_max', 'nomal_avg', 'alarm_min', 'alarm_max', 'alarm_avg','speed'])
 		oeedf=oeedf.fillna(0)
 		oeedf['date']=self.now
