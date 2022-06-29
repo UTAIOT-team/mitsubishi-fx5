@@ -46,7 +46,18 @@ import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
 from datetime import datetime
+import openpyxl
 from openpyxl.utils import get_column_letter
+from openpyxl.chart import (
+    Reference,
+    Series,
+    BarChart3D,
+	BarChart,
+	LineChart,
+	axis
+)
+
+
 import sys,os
 VALUE_OF_PLAN_ST =1
 VALUE_OF_PLAN_ED =2
@@ -67,7 +78,7 @@ class OEE_Class:
 	Q = 0
 	OEE = 0
 	actual_pcs = 0 #今日生產數量
-	total_time = timedelta(days=0) #總時間
+	total_time = timedelta(days=0) #總時間 - 非工作時間
 	load_time = timedelta(days=0) #負荷時間 (扣除休息時間)
 	nomal_time = timedelta(days=0) #淨稼動時間 (正常運轉時間)
 	capacity = 0 #pcs / hour 標準產能
@@ -154,7 +165,7 @@ class OEE_Class:
 		print('alarm_sum',work_time.loc[mask].during.agg('sum'))
 		rest=work_time[work_time.status>=500].during.agg('sum')
 		self.actual_pcs=work_time[work_time.parts>0].parts.agg('sum')
-		self.total_time = end_dt-st_dt
+		self.total_time = end_dt-st_dt-rest
 		self.load_time = end_dt-st_dt-rest
 		print('rest',rest)
 		print(self.nomal_time , self.total_time)
@@ -236,7 +247,7 @@ class OEE_Class:
 		self.P=float(self.actual_pcs/self.standard_pcs*100) if self.standard_pcs!=0 else 0
 		print("產能效率:",self.P,"%")
 		self.Q=float(1)
-		self.OEE=float(self.A*self.P*self.Q/100)
+		self.OEE=float(self.a*self.P*self.Q/100)
 		print("OEE:",self.OEE,"%")
 		print('機台速度',self.speed, 'sec/pcs')
 		
@@ -384,6 +395,7 @@ if __name__ == '__main__':
 
 	oeedf=pd.DataFrame()
 	piedf=pd.DataFrame()
+	wb = openpyxl.load_workbook(path)
 	for i in range(len(machine)):
 	# for i in range(1,2):
 		conn = DB_connect()
@@ -416,6 +428,7 @@ if __name__ == '__main__':
 			mask=['Production', 'load_time', 'total_time',
         'ttr', 'mtbf', 'mttr']
 			oeedf.loc[0,mask]=pd.to_timedelta(oeedf.loc[0,mask], unit='s').astype(str).str.replace('0 days ','')
+			piedf['seconds']=piedf.during
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
@@ -439,6 +452,7 @@ if __name__ == '__main__':
 				oeedf.to_excel(writer,sheet_name=name)
 				writer.if_sheet_exists='overlay'
 				piedf.to_excel(writer,sheet_name=name,startrow=last)
+				
 				last+=piedf.shape[0]+2
 				work_time.to_excel(writer,sheet_name=name,startrow=last)
 
@@ -449,9 +463,34 @@ if __name__ == '__main__':
 					if 2<=i<=3:
 						ws.column_dimensions[get_column_letter(i)].width = 20
 
+			if piedf.shape[0]>0:
+				
+				wss= wb[name]
+				last=oeedf.shape[0]+2
+				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
+				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
+				titles = Reference(ws, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
+				chart1 = BarChart()
+				chart1.title = name + " 狀態分布"
+				chart1.add_data(data=data1, titles_from_data=True)
+				chart1.set_categories(titles)
+				chart1.y_axis.title = '時間(秒)'
+				chart1.x_axis.title = '狀態'
+				chart2 = BarChart3D()
+				chart2 = LineChart()
+				chart2.add_data(data=data2, titles_from_data=True)
+				chart2.y_axis.title = '次數'
+				chart2.y_axis.axId = 200
+				chart2.y_axis.crosses = "max"
+				chart1 += chart2
+				chart1.style = 26
+				wss.add_chart(chart1, "J"+str(last+1))
+
 			print(work_time)
 			print(oeedf)
 			print(piedf)
+	wb.save(path)
+	wb.close()
 	piedf=piedf.replace('NA',pd.NA)
 
 	alled = time.time()
