@@ -64,7 +64,7 @@ class OEE_Class:
 	Q = 0
 	OEE = 0
 	actual_pcs = 0 #今日生產數量
-	total_time = timedelta(days=0) #總時間
+	total_time = timedelta(days=0) #總時間 - 非工作時間
 	load_time = timedelta(days=0) #負荷時間 (扣除休息時間)
 	nomal_time = timedelta(days=0) #淨稼動時間 (正常運轉時間)
 	capacity = 0 #pcs / hour 標準產能
@@ -142,7 +142,7 @@ class OEE_Class:
 		mask=(work_time['status'] != 1 ) & (work_time['status'] < 500 )
 		print('alarm_sum',work_time.loc[mask].during.agg('sum'))
 		rest=work_time[work_time.status>=500].during.agg('sum')
-		self.total_time = end_dt-st_dt
+		self.total_time = end_dt-st_dt-rest
 		self.load_time = end_dt-st_dt-rest
 		print('rest',rest)
 		print(self.nomal_time , self.total_time)
