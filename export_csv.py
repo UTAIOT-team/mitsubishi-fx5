@@ -394,9 +394,7 @@ if __name__ == '__main__':
 
 	oeedf=pd.DataFrame()
 	piedf=pd.DataFrame()
-	if not os.path.exists(path):
-		pd.DataFrame({}).to_excel(path)
-	wb = openpyxl.load_workbook(path)
+	
 	for i in range(len(machine)):
 	# for i in range(1,2):
 		conn = DB_connect()
@@ -436,7 +434,8 @@ if __name__ == '__main__':
 			work_time[['during','MTBF','MTTR']]=work_time[['during','MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('0 days ',''))
 			work_time[['MTBF','MTTR']]=work_time[['MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
 			
-			
+			if not os.path.exists(path):
+				pd.DataFrame({}).to_excel(path,sheet_name=name)
 
 			with pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace') as writer:
 			# with pd.ExcelWriter(engine='openpyxl', path=sys.argv[1]+'_excel_output.xlsx') as writer:
@@ -464,7 +463,7 @@ if __name__ == '__main__':
 						ws.column_dimensions[get_column_letter(i)].width = 20
 
 			if piedf.shape[0]>0:
-				
+				wb = openpyxl.load_workbook(path)
 				wss= wb[name]
 				last=oeedf.shape[0]+2
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
