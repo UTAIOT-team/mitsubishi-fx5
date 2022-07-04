@@ -41,7 +41,6 @@
 # -------------------------------------------------------------------
 import time
 import threading
-from unittest.mock import patch
 import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
