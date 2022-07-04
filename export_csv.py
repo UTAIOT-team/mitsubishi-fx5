@@ -142,11 +142,11 @@ class OEE_Class:
 		
 		work_time['parts']=seldf['parts']
 		work_time['parts']=work_time['parts'].shift(-1)-work_time['parts']
-		work_time['TBF']=work_time.loc[work_time['status']==1].during.fillna(pd.Timedelta(seconds=0))
-		work_time['TTR']=work_time.loc[(work_time['status']!=1) & (work_time['status']<500)].during.fillna(pd.Timedelta(seconds=0))
+		work_time['MTBF']=work_time.loc[work_time['status']==1].during.fillna(pd.Timedelta(seconds=0))
+		work_time['MTTR']=work_time.loc[(work_time['status']!=1) & (work_time['status']<500)].during.fillna(pd.Timedelta(seconds=0))
 
 
-		# work_time[['TBF','TTR']]=work_time[['TBF','TTR']].fillna(pd.Timedelta(seconds=0))
+		# work_time[['MTBF','MTTR']]=work_time[['MTBF','MTTR']].fillna(pd.Timedelta(seconds=0))
 		# work_time=work_time.fillna(pd.Timedelta(seconds=0))
 		#work_time.to_csv(name + ".csv")
 		print(work_time)
@@ -432,8 +432,8 @@ if __name__ == '__main__':
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
-			work_time[['during','TBF','TTR']]=work_time[['during','TBF','TTR']].apply(lambda _:_.astype(str).str.replace('0 days ',''))
-			work_time[['TBF','TTR']]=work_time[['TBF','TTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
+			work_time[['during','MTBF','MTTR']]=work_time[['during','MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('0 days ',''))
+			work_time[['MTBF','MTTR']]=work_time[['MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
 			
 			if not os.path.exists(path):
 				pd.DataFrame({}).to_excel(path,sheet_name=name)
