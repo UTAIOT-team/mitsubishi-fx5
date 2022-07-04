@@ -484,11 +484,12 @@ if __name__ == '__main__':
 				chart1 += chart2
 				chart1.style = 26
 				wss.add_chart(chart1, "J"+str(last+1))
+				wb.save(path)
 
 			print(work_time)
 			print(oeedf)
 			print(piedf)
-	wb.save(path)
+	
 	wb.close()
 	piedf=piedf.replace('NA',pd.NA)
 
