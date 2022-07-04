@@ -54,7 +54,6 @@ from openpyxl.chart import (
     BarChart3D,
 	BarChart,
 	LineChart,
-	axis
 )
 
 
