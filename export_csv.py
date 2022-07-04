@@ -456,14 +456,15 @@ if __name__ == '__main__':
 				work_time.to_excel(writer,sheet_name=name,startrow=last)
 
 				ws= writer.sheets[name]
-				for i in range(1, ws.max_column+1):
-					ws.column_dimensions[get_column_letter(i)].bestFit = True
-					ws.column_dimensions[get_column_letter(i)].auto_size = True
-					if 2<=i<=3:
-						ws.column_dimensions[get_column_letter(i)].width = 20
+				for j in range(1, ws.max_column+1):
+					ws.column_dimensions[get_column_letter(j)].bestFit = True
+					ws.column_dimensions[get_column_letter(j)].auto_size = True
+					if 2<=j<=3:
+						ws.column_dimensions[get_column_letter(j)].width = 20
 
 			if piedf.shape[0]>0:
-				wb = openpyxl.load_workbook(path)
+				if i==0:
+					wb = openpyxl.load_workbook(path)
 				wss= wb[name]
 				last=oeedf.shape[0]+2
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
@@ -484,12 +485,12 @@ if __name__ == '__main__':
 				chart1 += chart2
 				chart1.style = 26
 				wss.add_chart(chart1, "J"+str(last+1))
-				wb.save(path)
+				
 
 			print(work_time)
 			print(oeedf)
 			print(piedf)
-	
+	wb.save(path)
 	wb.close()
 	piedf=piedf.replace('NA',pd.NA)
 
