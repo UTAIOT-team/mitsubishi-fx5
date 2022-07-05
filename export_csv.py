@@ -395,7 +395,7 @@ if __name__ == '__main__':
 	piedf=pd.DataFrame()
 	if not os.path.exists(path):
 		for i in range(len(machine)):
-			name=name=machine[i].lower()
+			name=machine[i].lower()
 			pd.DataFrame({}).to_excel(path,sheet_name=name)
 	# if not os.path.exists(path):
 	# 	wb=openpyxl.Workbook()
