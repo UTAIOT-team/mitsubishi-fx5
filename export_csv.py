@@ -46,6 +46,7 @@ import sqlalchemy as sqla
 from datetime import timedelta
 from datetime import datetime
 import openpyxl
+from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import (
     Reference,
@@ -452,6 +453,9 @@ if __name__ == '__main__':
 			work_time.to_excel(writer,sheet_name=name,startrow=last)
 
 			ws= writer.sheets[name]
+			for row in ws['A:R']:
+				for cell in row:
+					cell.font = Font(size=16)
 			for j in range(1, ws.max_column+1):
 				ws.column_dimensions[get_column_letter(j)].bestFit = True
 				ws.column_dimensions[get_column_letter(j)].auto_size = True
