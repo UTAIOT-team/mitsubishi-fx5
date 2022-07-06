@@ -393,7 +393,16 @@ if __name__ == '__main__':
 
 	oeedf=pd.DataFrame()
 	piedf=pd.DataFrame()
-	wb = None
+	
+	if not os.path.exists(path):
+		wb = openpyxl.Workbook()
+		# wb.remove_sheet(wb['Sheet'])
+		del wb['Sheet']
+		for i in range(len(machine)):
+			name=machine[i].lower()	
+			wb.create_sheet(title=name)
+		wb.save(path)
+	writer = pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace')
 	for i in range(len(machine)):
 	# for i in range(1,2):
 		conn = DB_connect()
@@ -432,43 +441,28 @@ if __name__ == '__main__':
 			work_time = oee.work_time
 			work_time[['during','MTBF','MTTR']]=work_time[['during','MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('0 days ',''))
 			work_time[['MTBF','MTTR']]=work_time[['MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
-
-			if not os.path.exists(path):
-				pd.DataFrame({}).to_excel(path,sheet_name=name)
+				
+			last=oeedf.shape[0]+2
+			oeedf.to_excel(writer,sheet_name=name)
+			writer.if_sheet_exists='overlay'
+			piedf.to_excel(writer,sheet_name=name,startrow=last)
 			
-			with pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace') as writer:
-			# with pd.ExcelWriter(engine='openpyxl', path=sys.argv[1]+'_excel_output.xlsx') as writer:
-				# if os.path.exists(sys.argv[1]+'_excel_output.xlsx'):
-				# 	writer.mode='a'
-				# 	writer.if_sheet_exists='replace'
-				# else:
-				# 	writer.mode='w'
-				# oeedf.to_excel('excel_output.xlsx',sheet_name=name,engine='openpyxl')
-				# piedf.to_excel('excel_output.xlsx',sheet_name=name,startrow=oeedf.shape[0],engine='openpyxl')
-				
-				last=oeedf.shape[0]+2
-				oeedf.to_excel(writer,sheet_name=name)
-				writer.if_sheet_exists='overlay'
-				piedf.to_excel(writer,sheet_name=name,startrow=last)
-				
-				last+=piedf.shape[0]+2
-				work_time.to_excel(writer,sheet_name=name,startrow=last)
+			last+=piedf.shape[0]+2
+			work_time.to_excel(writer,sheet_name=name,startrow=last)
 
-				ws= writer.sheets[name]
-				for j in range(1, ws.max_column+1):
-					ws.column_dimensions[get_column_letter(j)].bestFit = True
-					ws.column_dimensions[get_column_letter(j)].auto_size = True
-					if 2<=j<=3:
-						ws.column_dimensions[get_column_letter(j)].width = 20
+			ws= writer.sheets[name]
+			for j in range(1, ws.max_column+1):
+				ws.column_dimensions[get_column_letter(j)].bestFit = True
+				ws.column_dimensions[get_column_letter(j)].auto_size = True
+				if 2<=j<=3:
+					ws.column_dimensions[get_column_letter(j)].width = 20
 
 			if piedf.shape[0]>0:
-				if not wb:
-					wb = openpyxl.load_workbook(path)
-				wss= wb[name]
+				ws= wb[name]
 				last=oeedf.shape[0]+2
-				data1 = Reference(wss, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
-				data2 = Reference(wss, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
-				titles = Reference(wss, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
+				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
+				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
+				titles = Reference(ws, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
 				chart1 = BarChart()
 				chart1.title = name + " 狀態分布"
 				chart1.add_data(data=data1, titles_from_data=True)
@@ -483,14 +477,15 @@ if __name__ == '__main__':
 				chart2.y_axis.crosses = "max"
 				chart1 += chart2
 				chart1.style = 26
-				wss.add_chart(chart1, "J"+str(last+1))
+				ws.add_chart(chart1, "J"+str(last+1))
 				
 
 			print(work_time)
 			print(oeedf)
 			print(piedf)
-	wb.save(path)
-	wb.close()
+	writer.save()
+	# wb.save(path)
+	# wb.close()
 	piedf=piedf.replace('NA',pd.NA)
 
 	alled = time.time()
