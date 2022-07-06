@@ -461,7 +461,7 @@ if __name__ == '__main__':
 				ws.column_dimensions[get_column_letter(j)].auto_size = True
 				if 2<=j<=3:
 					ws.column_dimensions[get_column_letter(j)].width = 26
-				elif i in (5,6,13):
+				elif j in (5,6,13):
 					ws.column_dimensions[get_column_letter(j)].width = 14
 
 			if piedf.shape[0]>0:
