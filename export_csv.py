@@ -460,7 +460,7 @@ if __name__ == '__main__':
 				ws.column_dimensions[get_column_letter(j)].bestFit = True
 				ws.column_dimensions[get_column_letter(j)].auto_size = True
 				if 2<=j<=3:
-					ws.column_dimensions[get_column_letter(j)].width = 20
+					ws.column_dimensions[get_column_letter(j)].width = 26
 
 			if piedf.shape[0]>0:
 				last=oeedf.shape[0]+2
