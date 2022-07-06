@@ -394,14 +394,15 @@ if __name__ == '__main__':
 	oeedf=pd.DataFrame()
 	piedf=pd.DataFrame()
 	
-	if not os.path.exists(path):
-		wb = openpyxl.Workbook()
-		# wb.remove_sheet(wb['Sheet'])
-		del wb['Sheet']
-		for i in range(len(machine)):
-			name=machine[i].lower()	
-			wb.create_sheet(title=name)
-		wb.save(path)
+	if os.path.exists(path):
+		os.remove(path)
+	wb = openpyxl.Workbook()
+	# wb.remove_sheet(wb['Sheet'])
+	del wb['Sheet']
+	for i in range(len(machine)):
+		name=machine[i].lower()	
+		wb.create_sheet(title=name)
+	wb.save(path)
 	writer = pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace')
 	for i in range(len(machine)):
 	# for i in range(1,2):
