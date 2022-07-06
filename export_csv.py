@@ -466,9 +466,9 @@ if __name__ == '__main__':
 					wb = openpyxl.load_workbook(path)
 				wss= wb[name]
 				last=oeedf.shape[0]+2
-				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
-				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
-				titles = Reference(ws, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
+				data1 = Reference(wss, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
+				data2 = Reference(wss, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
+				titles = Reference(wss, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
 				chart1 = BarChart()
 				chart1.title = name + " 狀態分布"
 				chart1.add_data(data=data1, titles_from_data=True)
