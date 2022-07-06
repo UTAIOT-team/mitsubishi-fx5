@@ -393,14 +393,7 @@ if __name__ == '__main__':
 
 	oeedf=pd.DataFrame()
 	piedf=pd.DataFrame()
-	if not os.path.exists(path):
-		for i in range(len(machine)):
-			name=machine[i].lower()
-			pd.DataFrame({}).to_excel(path,sheet_name=name)
-	# if not os.path.exists(path):
-	# 	wb=openpyxl.Workbook()
-	# 	wb.save(path)
-	wb = openpyxl.load_workbook(path)
+	wb = None
 	for i in range(len(machine)):
 	# for i in range(1,2):
 		conn = DB_connect()
@@ -466,7 +459,8 @@ if __name__ == '__main__':
 						ws.column_dimensions[get_column_letter(j)].width = 20
 
 			if piedf.shape[0]>0:
-
+				if not wb:
+					wb = openpyxl.load_workbook(path)
 				wss= wb[name]
 				last=oeedf.shape[0]+2
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
