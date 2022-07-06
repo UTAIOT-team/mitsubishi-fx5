@@ -456,7 +456,7 @@ if __name__ == '__main__':
 			last=oeedf.shape[0]+2
 			oeedf.to_excel(writer,sheet_name=name)
 			writer.if_sheet_exists='overlay'
-			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left')
+			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left').drop(columns=['value'])
 			piedf.to_excel(writer,sheet_name=name,startrow=last)
 
 			last+=piedf.shape[0]+2
