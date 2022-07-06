@@ -341,7 +341,7 @@ class DB_connect:
 	def read_status(self,name):
 		name=re.sub("\d+","", name)
 		table = "status"
-		sql = "Select value,status from " + table + " where name='"+ name + "'"
+		sql = "Select value,status as '狀態' from " + table + " where name='"+ name + "'"
 		seldf=pd.read_sql_query(sql, self.__engine)
 		return seldf
 
@@ -456,9 +456,9 @@ if __name__ == '__main__':
 			last=oeedf.shape[0]+2
 			oeedf.to_excel(writer,sheet_name=name)
 			writer.if_sheet_exists='overlay'
-			piedf.to_excel(writer,sheet_name=name,startrow=last)
 			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left')
-			
+			piedf.to_excel(writer,sheet_name=name,startrow=last)
+
 			last+=piedf.shape[0]+2
 			work_time.to_excel(writer,sheet_name=name,startrow=last)
 
