@@ -41,6 +41,7 @@
 # -------------------------------------------------------------------
 import time
 import threading
+import re
 import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
@@ -337,6 +338,13 @@ class DB_connect:
 		cap=workdf.loc[0,'standard_CAP'].astype(int)
 		return cap
 
+	def read_status(self,name):
+		name=re.sub("\d+","", name)
+		table = "status"
+		sql = "Select value,status from " + table + " where name='"+ name + "'"
+		seldf=pd.read_sql_query(sql, self.__engine)
+		return seldf
+
 		
 	def read_from(self,name):
 		t1=time.time()
@@ -410,6 +418,7 @@ if __name__ == '__main__':
 		conn = DB_connect()
 		name=machine[i].lower()
 		seldf = conn.read_from(name)
+		stdf = conn.read_status(name)
 		print(seldf)
 		# if seldf is not None:
 		if not seldf.empty:
@@ -448,6 +457,7 @@ if __name__ == '__main__':
 			oeedf.to_excel(writer,sheet_name=name)
 			writer.if_sheet_exists='overlay'
 			piedf.to_excel(writer,sheet_name=name,startrow=last)
+			piedf.merge(stdf, left_on='status',right_on='value', how='left')
 			
 			last+=piedf.shape[0]+2
 			work_time.to_excel(writer,sheet_name=name,startrow=last)
