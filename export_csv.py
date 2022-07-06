@@ -459,7 +459,6 @@ if __name__ == '__main__':
 					ws.column_dimensions[get_column_letter(j)].width = 20
 
 			if piedf.shape[0]>0:
-				ws= wb[name]
 				last=oeedf.shape[0]+2
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
 				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
@@ -479,7 +478,6 @@ if __name__ == '__main__':
 				chart1 += chart2
 				chart1.style = 26
 				ws.add_chart(chart1, "J"+str(last+1))
-				
 
 			print(work_time)
 			print(oeedf)
