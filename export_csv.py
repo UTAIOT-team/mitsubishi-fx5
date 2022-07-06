@@ -433,6 +433,9 @@ if __name__ == '__main__':
 			work_time[['during','MTBF','MTTR']]=work_time[['during','MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('0 days ',''))
 			work_time[['MTBF','MTTR']]=work_time[['MTBF','MTTR']].apply(lambda _:_.astype(str).str.replace('NaT',''))
 
+			if not os.path.exists(path):
+				pd.DataFrame({}).to_excel(path,sheet_name=name)
+			
 			with pd.ExcelWriter(engine='openpyxl', path=path, mode='a',if_sheet_exists='replace') as writer:
 			# with pd.ExcelWriter(engine='openpyxl', path=sys.argv[1]+'_excel_output.xlsx') as writer:
 				# if os.path.exists(sys.argv[1]+'_excel_output.xlsx'):
