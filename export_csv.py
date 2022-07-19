@@ -48,8 +48,9 @@ from datetime import timedelta
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font
-from openpyxl.chart.text import RichText
-from openpyxl.drawing.text import  RichTextProperties,Paragraph,ParagraphProperties, CharacterProperties
+from openpyxl.chart.plotarea import DataTable
+# from openpyxl.chart.text import RichText
+# from openpyxl.drawing.text import  RichTextProperties,Paragraph,ParagraphProperties, CharacterProperties
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import (
     Reference,
@@ -492,13 +493,18 @@ if __name__ == '__main__':
 				chart1.set_categories(titles)
 				chart1.y_axis.title = '時間(分)'
 				chart1.x_axis.title = '狀態'
-				rich_text = RichText(bodyPr=RichTextProperties(anchor="ctr",anchorCtr="1",rot="-5400000",
-					spcFirstLastPara="1",vertOverflow="ellipsis",wrap="square"),
-					p=[Paragraph(pPr=ParagraphProperties(defRPr=CharacterProperties(sz=1100)), endParaRPr=CharacterProperties(sz=1100))])
-				chart1.x_axis.txPr = rich_text
-				chart1.dataLabels = label.DataLabelList()
-				chart1.dataLabels.showVal = True
-				chart1.dataLabels.txPr = rich_text
+				# rich_text = RichText(bodyPr=RichTextProperties(anchor="ctr",anchorCtr="1",rot="-5400000",
+				# 	spcFirstLastPara="1",vertOverflow="ellipsis",wrap="square"),
+				# 	p=[Paragraph(pPr=ParagraphProperties(defRPr=CharacterProperties(sz=1100)), endParaRPr=CharacterProperties(sz=1100))])
+				# chart1.x_axis.txPr = rich_text
+				# chart1.dataLabels = label.DataLabelList()
+				# chart1.dataLabels.showVal = True
+				# chart1.dataLabels.txPr = rich_text
+				chart1.plot_area.dTable = DataTable()
+				chart1.plot_area.dTable.showHorzBorder = True
+				chart1.plot_area.dTable.showVertBorder = True
+				chart1.plot_area.dTable.showOutline = True
+				chart1.plot_area.dTable.showKeys = True
 				chart2 = LineChart()
 				chart2.add_data(data=data2, titles_from_data=True)
 				chart2.y_axis.title = '次數'
