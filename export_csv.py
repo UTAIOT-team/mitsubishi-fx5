@@ -449,7 +449,7 @@ if __name__ == '__main__':
 			mask=['Production', 'load_time', 'total_time',
         'ttr', 'mtbf', 'mttr']
 			oeedf.loc[0,mask]=pd.to_timedelta(oeedf.loc[0,mask], unit='s').astype(str).str.replace('0 days ','')
-			piedf['minutes']=round(piedf.during/60,1)
+			piedf['minutes']=str(round(piedf.during/60,1))+"分"
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
