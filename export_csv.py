@@ -49,6 +49,7 @@ from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font
 from openpyxl.chart.text import RichText
+from openpyxl.drawing.text import  RichTextProperties,Paragraph,ParagraphProperties, CharacterProperties
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import (
     Reference,
