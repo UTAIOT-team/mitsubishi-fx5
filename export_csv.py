@@ -461,6 +461,8 @@ if __name__ == '__main__':
 			oeedf.to_excel(writer,sheet_name=name)
 			writer.if_sheet_exists='overlay'
 			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left').drop(columns=['value'])
+			sum=piedf.minutes.agg('sum')
+			piedf.status=piedf.status.astype(str).values+"("+ (round(piedf.minutes/sum,0)*100).astype(str).values +"%)"
 			piedf.to_excel(writer,sheet_name=name,startrow=last)
 
 			last+=piedf.shape[0]+2
