@@ -449,7 +449,7 @@ if __name__ == '__main__':
 			mask=['Production', 'load_time', 'total_time',
         'ttr', 'mtbf', 'mttr']
 			oeedf.loc[0,mask]=pd.to_timedelta(oeedf.loc[0,mask], unit='s').astype(str).str.replace('0 days ','')
-			piedf['minutes']=round(piedf.during/60,1).astype(str).values+"分"
+			piedf['minutes']=round(piedf.during/60,1)
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
@@ -479,6 +479,10 @@ if __name__ == '__main__':
 
 			if piedf.shape[0]>0:
 				last=oeedf.shape[0]+2
+				min_row=last+1
+				max_row=last+piedf.shape[0]+1
+				for row in range(min_row,max_row):
+					ws[f'G{row}'].number_format ='0.0分'
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
 				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
 				titles = Reference(ws, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
