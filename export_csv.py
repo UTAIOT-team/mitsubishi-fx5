@@ -242,8 +242,8 @@ class OEE_Class:
 		self.a=float(self.nomal_time/self.load_time*100) if self.load_time!=timedelta(0) else 0
 		print("負荷時間率",self.A,"%")
 		print("稼動率",self.a,"%")
-		print("今日產能:",self.actual_pcs)
-		print("標準產能:",round(self.standard_pcs,0))
+		print("實際數量:",self.actual_pcs)
+		print("計畫數量:",self.standard_pcs)
 		self.P=float(self.actual_pcs/self.standard_pcs*100) if self.standard_pcs!=0 else 0
 		print("產能效率:",self.P,"%")
 		self.Q=float(1)
@@ -446,7 +446,7 @@ if __name__ == '__main__':
 			mask=['Production', 'load_time', 'total_time',
         'ttr', 'mtbf', 'mttr']
 			oeedf.loc[0,mask]=pd.to_timedelta(oeedf.loc[0,mask], unit='s').astype(str).str.replace('0 days ','')
-			piedf['seconds']=piedf.during
+			piedf['minutes']=round(piedf.during/60,1)
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
@@ -483,7 +483,7 @@ if __name__ == '__main__':
 				chart1.title = name + " 狀態分布"
 				chart1.add_data(data=data1, titles_from_data=True)
 				chart1.set_categories(titles)
-				chart1.y_axis.title = '時間(秒)'
+				chart1.y_axis.title = '時間(分)'
 				chart1.x_axis.title = '狀態'
 				chart2 = BarChart3D()
 				chart2 = LineChart()
