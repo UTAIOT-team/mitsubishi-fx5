@@ -483,6 +483,7 @@ if __name__ == '__main__':
 				min_row=last+1
 				max_row=last+piedf.shape[0]+1
 				for row in range(min_row+1,max_row+1):
+					ws[f'F{row}'].number_format ='0次'
 					ws[f'G{row}'].number_format ='0.0分'
 				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
 				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
