@@ -42,6 +42,8 @@
 import time
 import threading
 import re
+import math
+from tkinter.tix import AUTO
 import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
@@ -49,8 +51,8 @@ from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font
 from openpyxl.chart.plotarea import DataTable
-# from openpyxl.chart.text import RichText
-# from openpyxl.drawing.text import  RichTextProperties,Paragraph,ParagraphProperties, CharacterProperties
+from openpyxl.chart.text import RichText
+from openpyxl.drawing.text import  RichTextProperties,Paragraph,ParagraphProperties, CharacterProperties
 from openpyxl.utils import get_column_letter
 from openpyxl.chart import (
     Reference,
@@ -61,6 +63,13 @@ from openpyxl.chart import (
 	label
 )
 
+# import jpype
+# import asposecells
+# jpype.startJVM()
+# from asposecells.api import (
+# 	Workbook,
+# 	PdfSaveOptions
+# ) 
 
 import sys,os
 VALUE_OF_PLAN_ST =1
@@ -107,7 +116,6 @@ class OEE_Class:
 		global NOW
 		self.now=NOW
 		self.machine = name
-		
 		# 2^32溢位問題排除
 		# if seldf.parts.max() > 2**32-10**7:
 		# 	over_max=seldf[seldf.parts>2**31].max().fillna(0)
@@ -131,7 +139,7 @@ class OEE_Class:
 		seldf.loc[-1]={'date':st_dt}
 		seldf.index=seldf.index+1
 		seldf = seldf.sort_index().fillna(method="bfill")
-		seldf = seldf.append({'date':end_dt},ignore_index=True).fillna(method="ffill")
+		seldf = pd.concat([seldf,pd.Series({'date':end_dt}).to_frame(len(seldf)).T],axis=0).fillna(method="ffill")
 		seldf['flag']=seldf['value']==seldf['value'].shift(1)
 		seldf.loc[seldf.tail(1).index,'flag']=False
 		seldf=seldf.drop(seldf[seldf.flag==True].index)
@@ -277,7 +285,7 @@ class OEE_Class:
 		else:
 			oeedf['mtbf']=0
 			oeedf['mttr']=0
-		print(oeedf.loc[0,['ft','ttr','Production','total_time','mtbf','mttr']])
+		# print(oeedf.loc[0,['ft','ttr','Production','total_time','mtbf','mttr']])
 		return oeedf
 
 	def __alarm_analyze(self):
@@ -381,8 +389,8 @@ class DB_connect:
 		df.to_sql(table, self.__engine, if_exists='append', index=False)
 
 if __name__ == '__main__':
-	# dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
-	dir='/home/uta_iot/excel_output/'
+	dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
+	# dir='/home/uta_iot/excel_output/'
 	if len(sys.argv) >1:
 		NOW=datetime.strptime(sys.argv[1], "%Y%m%d").date()
 		path=dir+sys.argv[1]+'_excel_output.xlsx'
@@ -451,6 +459,9 @@ if __name__ == '__main__':
         'ttr', 'mtbf', 'mttr']
 			oeedf.loc[0,mask]=pd.to_timedelta(oeedf.loc[0,mask], unit='s').astype(str).str.replace('0 days ','')
 			piedf['minutes']=round(piedf.during/60,1)
+			tempS=pd.concat([pd.Series([name,NOW,500], index=['name','date','status']),piedf[['during','times','minutes']].loc[piedf['status']>=500].agg('sum')])
+			if tempS.times>0:
+				piedf=pd.concat([piedf[piedf['status']<500],tempS.to_frame(len(piedf)).T],axis=0)
 			piedf['during']= pd.to_timedelta(piedf['during'], unit='s').astype(str)
 			piedf.during=piedf.during.apply(lambda _:str(_).replace('0 days ',''))
 			work_time = oee.work_time
@@ -462,23 +473,32 @@ if __name__ == '__main__':
 			writer.if_sheet_exists='overlay'
 			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left').drop(columns=['value'])
 			sum=piedf.minutes.agg('sum')
-			piedf.status=piedf.status.astype(str).values+"("+ (round(piedf.minutes/sum,0)*100).astype(str).values +"%)"
+			piedf=piedf.convert_dtypes(infer_objects=True)
+			piedf.status=piedf.status.astype(str)+"\n("+round((piedf.minutes/sum)*100,1).astype(str)+"%)"
+			piedf['status']=piedf['status'].apply(lambda _:str(_).replace('500','500+'))
+			piedf['狀態']=piedf['狀態'].apply(lambda _:str(_).replace('<NA>','休息時間'))
 			piedf.to_excel(writer,sheet_name=name,startrow=last)
-
+			
 			last+=piedf.shape[0]+2
-			work_time.to_excel(writer,sheet_name=name,startrow=last)
+			work_time.to_excel(writer,sheet_name=name+"明細")
 
 			ws= writer.sheets[name]
+			ws_sub=writer.sheets[name+"明細"]
 			for row in ws['A:R']:
 				for cell in row:
 					cell.font = Font(size=16)
 			for j in range(1, ws.max_column+1):
 				ws.column_dimensions[get_column_letter(j)].bestFit = True
 				ws.column_dimensions[get_column_letter(j)].auto_size = True
-				if 2<=j<=3:
-					ws.column_dimensions[get_column_letter(j)].width = 26
-				elif j in (6,7,13):
+				if j in (2,3,4,6,7,13):
 					ws.column_dimensions[get_column_letter(j)].width = 16
+
+			for j in range(1, ws_sub.max_column+1):
+				ws_sub.column_dimensions[get_column_letter(j)].bestFit = True
+				ws_sub.column_dimensions[get_column_letter(j)].auto_size = True
+				if 2<=j<=3:
+					ws_sub.column_dimensions[get_column_letter(j)].width = 23
+
 
 			if piedf.shape[0]>0:
 				last=oeedf.shape[0]+2
@@ -487,43 +507,88 @@ if __name__ == '__main__':
 				for row in range(min_row+1,max_row+1):
 					ws[f'F{row}'].number_format ='0次'
 					ws[f'G{row}'].number_format ='0.0分'
-				data1 = Reference(ws, min_col=7, min_row=last+1, max_col=7, max_row=last+piedf.shape[0]+1)
-				data2 = Reference(ws, min_col=6, min_row=last+1, max_col=6, max_row=last+piedf.shape[0]+1)
-				titles = Reference(ws, min_col=4, min_row=last+2, max_row=last+piedf.shape[0]+1)
+				data1 = Reference(ws, min_col=7, min_row=min_row, max_col=7, max_row=max_row)
+				data2 = Reference(ws, min_col=6, min_row=min_row, max_col=6, max_row=max_row)
+				titles = Reference(ws, min_col=4, min_row=min_row+1, max_row=max_row)
 				chart1 = BarChart()
 				chart1.title = name + " 狀態分布"
 				chart1.add_data(data=data1, titles_from_data=True)
 				chart1.set_categories(titles)
 				chart1.y_axis.title = '時間(分)'
-				chart1.x_axis.title = '狀態'
-				# rich_text = RichText(bodyPr=RichTextProperties(anchor="ctr",anchorCtr="1",rot="-5400000",
-				# 	spcFirstLastPara="1",vertOverflow="ellipsis",wrap="square"),
-				# 	p=[Paragraph(pPr=ParagraphProperties(defRPr=CharacterProperties(sz=1100)), endParaRPr=CharacterProperties(sz=1100))])
+				chart1.y_axis.numFmt='0"分"'
+				# chart1.x_axis.title = '狀態'
+				chart1.y_axis.majorUnit = 60
+				chart1.y_axis.minorUnit = 60
+				chart1.legend=None
+				pp=ParagraphProperties(defRPr=CharacterProperties(sz=1400))
+				rich_text = RichText(bodyPr=RichTextProperties(anchor="ctr",anchorCtr="1",rot="0",
+					spcFirstLastPara="1",vertOverflow="ellipsis",wrap="square"),
+					p=[Paragraph(pPr=pp, endParaRPr=CharacterProperties(sz=1400))])
 				# chart1.x_axis.txPr = rich_text
-				# chart1.dataLabels = label.DataLabelList()
-				# chart1.dataLabels.showVal = True
-				# chart1.dataLabels.txPr = rich_text
 				chart1.plot_area.dTable = DataTable()
 				chart1.plot_area.dTable.showHorzBorder = True
 				chart1.plot_area.dTable.showVertBorder = True
 				chart1.plot_area.dTable.showOutline = True
 				chart1.plot_area.dTable.showKeys = True
+				chart1.plot_area.dTable.txPr = rich_text
 				chart2 = LineChart()
+				chart2.auto_axis = False
 				chart2.add_data(data=data2, titles_from_data=True)
+				chart2.series[0].marker.symbol = "circle"
+				chart2.series[0].marker.size = 10
 				chart2.y_axis.title = '次數'
 				chart2.y_axis.axId = 200
 				chart2.y_axis.crosses = "max"
+				chart1.y_axis.txPr = rich_text
+				chart2.y_axis.txPr = rich_text
+				chart1.y_axis.title.tx.rich.p[0].pPr = pp
+				chart2.y_axis.title.tx.rich.p[0].pPr = pp
+				print(math.ceil(piedf.minutes.max()/60))
+				if piedf.times.max()<=math.ceil(piedf.minutes.max()/60):
+					chart2.y_axis.majorUnit = 1
+					chart2.y_axis.scaling.max=math.ceil(piedf.minutes.max()/60)
+				else:
+					chart2.y_axis.majorUnit = 10
+				chart2.y_axis.scaling.min=0
+				chart2.y_axis.minorUnit = 1
 				chart1 += chart2
 				chart1.style = 26
-				ws.add_chart(chart1, "J"+str(last+1))
+				# chart1.width = 22
+				chart1.height = 15
+				chart1.width = 45
+				last=max_row+2
+				ws.add_chart(chart1, "A"+str(last))
+				ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
+				ws.page_setup.paperSize = ws.PAPERSIZE_A3
+				ws.sheet_properties.pageSetUpPr.fitToPage = True
+				ws.print_options.headings=True
+				ws_sub.page_setup.orientation = ws_sub.ORIENTATION_PORTRAIT
+				ws_sub.page_setup.paperSize = ws_sub.PAPERSIZE_A4
+				ws_sub.print_title_rows='1:1'
+				ws_sub.sheet_properties.pageSetUpPr.fitToPage = True
+				ws_sub.page_setup.fitToHeight = False
+				ws_sub.print_options.gridLines=True
+				ws_sub.oddHeader.center.text = name + "明細"
+				# ws_sub.freeze_panes = 'A2'
+				# ws_sub.print_options.headings=True
+
 
 			print(work_time)
 			print(oeedf)
 			print(piedf)
+
+
+	
 	writer.save()
+
 	# wb.save(path)
 	# wb.close()
-	piedf=piedf.replace('NA',pd.NA)
+
+	
+	workbook = Workbook(path)
+	# Create and set PDF options
+	# pdfOptions = PdfSaveOptions()
+	# workbook.save(path.replace("_excel_output.xlsx",".pdf"), pdfOptions)
 
 	alled = time.time()
 	# 列印結果
