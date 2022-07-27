@@ -584,7 +584,7 @@ if __name__ == '__main__':
 	# wb.close()
 
 	
-	workbook = Workbook(path)
+	# workbook = Workbook(path)
 	# Create and set PDF options
 	# pdfOptions = PdfSaveOptions()
 	# workbook.save(path.replace("_excel_output.xlsx",".pdf"), pdfOptions)
