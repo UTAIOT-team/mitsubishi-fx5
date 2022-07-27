@@ -43,7 +43,6 @@ import time
 import threading
 import re
 import math
-from tkinter.tix import AUTO
 import pandas as pd
 import sqlalchemy as sqla
 from datetime import timedelta
