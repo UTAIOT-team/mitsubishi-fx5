@@ -3,3 +3,4 @@ openpyxl
 sqlalchemy
 mysql-connector-python
 ping3
+aspose-cells

@@ -388,8 +388,8 @@ class DB_connect:
 		df.to_sql(table, self.__engine, if_exists='append', index=False)
 
 if __name__ == '__main__':
-	# dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
-	dir='/home/uta_iot/excel_output/'
+	dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
+	# dir='/home/uta_iot/excel_output/'
 	if len(sys.argv) >1:
 		NOW=datetime.strptime(sys.argv[1], "%Y%m%d").date()
 		path=dir+sys.argv[1]+'_excel_output.xlsx'
@@ -471,11 +471,11 @@ if __name__ == '__main__':
 			oeedf.to_excel(writer,sheet_name=name)
 			writer.if_sheet_exists='overlay'
 			piedf=piedf.merge(stdf, left_on='status',right_on='value', how='left').drop(columns=['value'])
-			sum=piedf.minutes.agg('sum')
+			sum=piedf[piedf.status<500].minutes.agg('sum')
 			piedf=piedf.convert_dtypes(infer_objects=True)
-			piedf.status=piedf.status.astype(str)+"\n("+round((piedf.minutes/sum)*100,1).astype(str)+"%)"
-			piedf['status']=piedf['status'].apply(lambda _:str(_).replace('500','500+'))
-			piedf['狀態']=piedf['狀態'].apply(lambda _:str(_).replace('<NA>','休息時間'))
+			piedf['狀態']=piedf['狀態'].apply(lambda _:str(_).replace('<NA>','休息時間') if '<NA>' in str(_) else re.sub("\d+ ","", str(_)))
+			piedf.status=piedf.status.astype(str)+"\n("+round((piedf.minutes/sum)*100,1).astype(str)+"%)\n"+ piedf['狀態'].astype(str)
+			piedf['status']=piedf['status'].apply(lambda _:	"500+\n(0%)\n休息時間" if '500' in _ else _)
 			piedf.to_excel(writer,sheet_name=name,startrow=last)
 			
 			last+=piedf.shape[0]+2
@@ -506,6 +506,9 @@ if __name__ == '__main__':
 				for row in range(min_row+1,max_row+1):
 					ws[f'F{row}'].number_format ='0次'
 					ws[f'G{row}'].number_format ='0.0分'
+				flag500=piedf.status.str.contains('500+').any()
+				if flag500:
+					max_row=max_row-1
 				data1 = Reference(ws, min_col=7, min_row=min_row, max_col=7, max_row=max_row)
 				data2 = Reference(ws, min_col=6, min_row=min_row, max_col=6, max_row=max_row)
 				titles = Reference(ws, min_col=4, min_row=min_row+1, max_row=max_row)
@@ -543,11 +546,19 @@ if __name__ == '__main__':
 				chart1.y_axis.title.tx.rich.p[0].pPr = pp
 				chart2.y_axis.title.tx.rich.p[0].pPr = pp
 				print(math.ceil(piedf.minutes.max()/60))
-				if piedf.times.max()<=math.ceil(piedf.minutes.max()/60):
+				# factor=round(piedf.minutes.max()/60,0)+1
+				factor=math.ceil(piedf.minutes.max()/60)
+				chart1.y_axis.scaling.max=factor*60
+				if piedf.times.max()<=factor:
 					chart2.y_axis.majorUnit = 1
-					chart2.y_axis.scaling.max=math.ceil(piedf.minutes.max()/60)
-				else:
+					chart2.y_axis.scaling.max=factor
+				elif piedf.times.max()<=factor*10:
 					chart2.y_axis.majorUnit = 10
+					chart2.y_axis.scaling.max=factor*10
+				else:
+					n=math.ceil(piedf.times.max()/factor)
+					chart2.y_axis.majorUnit = n
+					chart2.y_axis.scaling.max = factor*n
 				chart2.y_axis.scaling.min=0
 				chart2.y_axis.minorUnit = 1
 				chart1 += chart2
@@ -555,7 +566,7 @@ if __name__ == '__main__':
 				# chart1.width = 22
 				chart1.height = 15
 				chart1.width = 45
-				last=max_row+2
+				last=max_row+2 + (1 if flag500 else 0)
 				ws.add_chart(chart1, "A"+str(last))
 				ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
 				ws.page_setup.paperSize = ws.PAPERSIZE_A3
