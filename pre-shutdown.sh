@@ -16,8 +16,8 @@ case "${1:-''}" in
 	'stop')
 		#关机需要执行的逻辑
 		#登出iscsi命令写在这里，本文不展示
-		mysqldump -uroot -puta1234 --databases test watch_files mqtt cms mes >> /home/uta_iot/utashare_iotdb/$(date +%Y_%m_%d_%H_%M_%S).sql;
-		#umount /home/uta_iot/excel_output /home/uta_iot/utashare_iotdb/
+		#mysqldump -uroot -puta1234 --databases test watch_files mqtt cms mes >> /home/uta_iot/utashare_iotdb/$(date +%Y_%m_%d_%H_%M_%S).sql;
+		umount /home/uta_iot/excel_output /home/uta_iot/utashare_iotdb/
 		;;
 	*)
 		;;
