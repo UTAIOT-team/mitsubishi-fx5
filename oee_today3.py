@@ -112,7 +112,7 @@ class OEE_Class:
 		seldf.loc[-1]={'date':st_dt}
 		seldf.index=seldf.index+1
 		seldf = seldf.sort_index().fillna(method="bfill")
-		seldf = seldf.append({'date':end_dt},ignore_index=True).fillna(method="ffill")
+		seldf = pd.concat([seldf,pd.Series({'date':end_dt}).to_frame(len(seldf)).T],axis=0).fillna(method="ffill")
 		seldf['flag']=seldf['value']==seldf['value'].shift(1)
 		seldf.loc[seldf.tail(1).index,'flag']=False
 		seldf=seldf.drop(seldf[seldf.flag==True].index)
