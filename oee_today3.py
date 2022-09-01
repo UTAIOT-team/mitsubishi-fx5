@@ -699,7 +699,7 @@ if __name__ == '__main__':
 		# for i in range(2,3): # for debug
 			conn = DB_connect()
 			name=machine[i].lower()
-			if i!=0:
+			if name!='mx14':
 				conn.reduce_data(name)
 			seldf = conn.read_from(name)
 			# if seldf is not None:
