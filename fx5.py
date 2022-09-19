@@ -269,6 +269,10 @@ class FX5:
 			#return msg[19]
 			#return self.to_int32signed(re[3],re[2],re[1],re[0])
 			return self.to_int32_unsigned(re[3],re[2],re[1],re[0])
+		elif type==3:	
+			return self.to_int16_signed(re[1], re[0])
+		elif type==4:	
+			return self.to_int32_signed(re[3],re[2],re[1],re[0])
 		else:
 			return re
 
@@ -349,7 +353,7 @@ class FX5:
 		return (upper<<8) + lower
 		
 	def to_int32_unsigned(self, r32,r24,r16,r8):
-		'''convert 2-byte(8bit/hex) to signed 32-bit
+		'''convert 2-byte(8bit/hex) to unsigned 32-bit
 		
 		Args:
 			r32 (int): 24-32 btye
