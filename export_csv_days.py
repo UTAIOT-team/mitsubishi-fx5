@@ -60,6 +60,8 @@ class DB_connect:
 		print('read database cost %f sec' %(time.time()-t1))
 		return seldf
 		
+	def close(self):
+		self.__engine.dispose()
 
 	
 if __name__ == '__main__':
@@ -163,8 +165,9 @@ if __name__ == '__main__':
 			ws.page_setup.paperSize = ws.PAPERSIZE_A3
 			ws.sheet_properties.pageSetUpPr.fitToPage = True
 			ws.print_options.headings=True
-	writer.save()		
+	writer.save()
 
+	conn.close()
 	alled = time.time()
 	# 列印結果
 	print("loop cost %f sec" % (alled - allst))  # 會自動做進位

@@ -387,6 +387,9 @@ class DB_connect:
 		sql = 'Select * from ' + table
 		df.to_sql(table, self.__engine, if_exists='append', index=False)
 
+	def close(self):
+		self.__engine.dispose()		
+
 if __name__ == '__main__':
 	dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
 	# dir='/home/uta_iot/excel_output/'
@@ -599,7 +602,7 @@ if __name__ == '__main__':
 	# Create and set PDF options
 	# pdfOptions = PdfSaveOptions()
 	# workbook.save(path.replace("_excel_output.xlsx",".pdf"), pdfOptions)
-
+	conn.close()
 	alled = time.time()
 	# 列印結果
 	print("loop cost %f sec" % (alled - allst))  # 會自動做進位
