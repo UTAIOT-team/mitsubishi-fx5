@@ -192,6 +192,9 @@ class DB_connect:
 			newdf.iloc[[i],2:].to_sql(table, self.__engine, if_exists='append', index=False)
 		return tempdf
 
+	def close(self):
+		self.__engine.dispose()
+
 
 if __name__ == '__main__':
 	allst=time.time()
@@ -244,7 +247,7 @@ if __name__ == '__main__':
 		conn = DB_connect()
 		tempdf = conn.write_to_sql(df,times,tempdf)
 		print(tempdf)
-		
+		conn.close()
 		print(datetime.now())
 		print('done all cost time %f' % (time.time()-allst))
 		time.sleep(10)
