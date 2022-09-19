@@ -679,6 +679,8 @@ WHERE id ={updf.loc[i,'id']};
 				cnn.execute(sql)
 		print('reduce database %s cost %f sec' %(name,(time.time()-t1)))
 
+	def close(self):
+		self.__engine.dispose()
 
 
 if __name__ == '__main__':
@@ -732,7 +734,7 @@ if __name__ == '__main__':
 		piedf=piedf.replace('NA',pd.NA)
 		conn.write_to_sql(oeedf,'oee')
 		conn.write_to_sql(piedf,'pie')
-
+		conn.close()
 		alled = time.time()
 		# 列印結果
 		print("loop cost %f sec" % (alled - allst))  # 會自動做進位
