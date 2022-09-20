@@ -65,8 +65,8 @@ class DB_connect:
 
 	
 if __name__ == '__main__':
-	dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
-	# dir='/home/uta_iot/excel_output/'
+	# dir=r'\\Nas\uta-share\UTA資料庫\UTA共用區\Q-專案執行\改善\(G組) MES\表單自動化' + '\\'
+	dir='/home/uta_iot/excel_output/'
 	if len(sys.argv) ==2:
 		min,max=sys.argv[1].split("-")
 		min=datetime.strptime(min.strip(), "%Y%m%d").date() + timedelta(hours=8)
