@@ -10,7 +10,7 @@
 ### END INIT INFO
 case "${1:-''}" in
 	'start')
-
+		mount -a
 		#开机需要执行的逻辑
 		;;
 	'stop')
