@@ -307,10 +307,10 @@ class DB_connect:
 		print(today_min,today_max)
 		if schdf.empty:
 			init=[
-				[today_min.replace(hour=8),name,VALUE_OF_PLAN_ST,'morning'],#morning
+				[today_min.replace(hour=8),name,VALUE_OF_PLAN_ED,'morning'],#morning
 				[today_min.replace(hour=8),name,VALUE_OF_PLAN_ED,'pre_last'],#pre_last
 				[today_min.replace(hour=12),name,VALUE_OF_PLAN_ED,'noon'],#noon
-				[today_min.replace(hour=13),name,VALUE_OF_PLAN_ST,'afternoon'],#afternoon
+				[today_min.replace(hour=13),name,VALUE_OF_PLAN_ED,'afternoon'],#afternoon
 				[today_min.replace(hour=17),name,VALUE_OF_PLAN_ED,'dusk'],#下班
 				[today_min.replace(hour=17,minute=30),name,VALUE_OF_PLAN_ED,'dusk'],#下班
 				[today_min.replace(hour=17,minute=30),name,VALUE_OF_PLAN_ED,'night'],#night
