@@ -408,12 +408,13 @@ class DB_connect:
 				noon=self.today_now- (chk12 - CHK_TOLERANCE)
 				if noon > timedelta(hours=1):
 					noon = timedelta(hours=1)
-				if morning_df['value'].iloc[-1]==1:
-					morning+=noon
-					schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
-				elif not noon_df[noon_df.value==1].empty:
-					morning+=noon
-					schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
+				if not morning_df[morning_df.value==1].empty:
+					if morning_df['value'].iloc[-1]==1:
+						morning+=noon
+						schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
+					elif not noon_df[noon_df.value==1].empty:
+						morning+=noon
+						schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ST
 				else:
 					rest+=noon
 					schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ED
