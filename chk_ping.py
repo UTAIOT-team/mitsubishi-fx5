@@ -37,7 +37,8 @@ def PLC_connect(name,host,reg,q,i,times):
 	# )
 	# print(noon_st<=NOW<noon_ed)
 	try:
-		chk_ping=ping(host.split(":")[0],timeout=1)        
+		chk_ping=ping(host.split(":")[0],timeout=1)
+		res['parts']=np.nan
 		if chk_ping:
 			res['name']=name
 			res['value']=chk_ping
@@ -47,7 +48,7 @@ def PLC_connect(name,host,reg,q,i,times):
 			res['name']=name
 			res['value']=chk_ping
 
-			q[i]=res
+			q[i]={}
 
 		# try:
 		# 	fx5 = FX5.get_connection(host)
@@ -88,7 +89,7 @@ def PLC_connect(name,host,reg,q,i,times):
 		# 		q[i]=res
 	except OSError as err:
 		print(name, err)
-		pass
+		exit()
 
 
 if __name__ == '__main__':
