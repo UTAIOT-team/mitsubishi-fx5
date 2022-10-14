@@ -69,16 +69,17 @@ def PLC_connect(name,host,reg,q,i,times,e):
 				pass
 
 		else:
-			if noon_st<=NOW<noon_ed:
-				res['value']=509
-			elif dusk_st<=NOW<dusk_ed:
-				res['value']=509
-			else:
-				res['value']=9
-			q[i]=res
-			#ping 超時判斷，待對策處理
 			e[i] = {'name':name,'err': 'NO responds. chk_ping(' + str(chk_ping) +')'+ 'and gateway_ping:' + str(gateway_ping)}
-
+			#ping 超時判斷，待對策處理
+			if not gateway_ping:
+				if noon_st<=NOW<noon_ed:
+					res['value']=509
+				elif dusk_st<=NOW<dusk_ed:
+					res['value']=509
+				else:
+					res['value']=9
+				q[i]=res
+			
 	except Exception as err:
 		print("ping err",name, err)
 		e[i] = {'name':name,'err': 'PING ERR ' + str(err)}
