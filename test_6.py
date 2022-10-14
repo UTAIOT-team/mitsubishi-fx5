@@ -73,7 +73,7 @@ def PLC_connect(name,host,reg,q,i,times,e):
 			else:
 				res['value']=9
 			q[i]=res
-			e[i] = {'name':name,'err': 'NO responds ping ' + str(err)}
+			e[i] = {'name':name,'err': 'NO responds ping '}
 
 	except Exception as err:
 		print("ping err",name, err)
