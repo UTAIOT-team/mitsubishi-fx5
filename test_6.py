@@ -40,7 +40,10 @@ def PLC_connect(name,host,reg,q,i,times,e):
 	# print(noon_st<=NOW<noon_ed)
 
 	try:
-		chk_ping=ping(host.split(":")[0],timeout=1)
+		hostip=host.split(":")[0]
+		gateway=hostip.replace(".1.",".3.")
+		chk_ping=ping(hostip,timeout=1)
+		gateway_ping=ping(gateway,timeout=1)
 		if chk_ping:
 			try:
 				fx5 = FX5.get_connection(host)
@@ -62,7 +65,7 @@ def PLC_connect(name,host,reg,q,i,times,e):
 
 			except Exception as err:
 				print("PLC connect err",name, err)
-				e[i] = {'name':name,'err': 'PLC ERR ' + str(err)}
+				e[i] = {'name':name,'err': 'PLC ERR ' + str(err) + 'and gateway_ping:' + str(gateway_ping)}
 				pass
 
 		else:
@@ -73,7 +76,8 @@ def PLC_connect(name,host,reg,q,i,times,e):
 			else:
 				res['value']=9
 			q[i]=res
-			e[i] = {'name':name,'err': 'NO responds. chk_ping(' + str(chk_ping) +')'}
+			#ping 超時判斷，待對策處理
+			e[i] = {'name':name,'err': 'NO responds. chk_ping(' + str(chk_ping) +')'+ 'and gateway_ping:' + str(gateway_ping)}
 
 	except Exception as err:
 		print("ping err",name, err)
