@@ -1,10 +1,13 @@
 #!/bin/bash
 START=${SECONDS}
-mysqldump -uroot -puta1234 -q --single-transaction --databases test watch_files mqtt cms mes >> /home/uta_iot/dumpdb/$(date +%Y_%m_%d_%H_%M_%S).sql;
+BACKUP=/home/uta_iot/dumpdb/$(date +%Y_%m_%d_%H_%M_%S)_fullbackup
+#mysqldump -uroot -puta1234 -q --single-transaction --databases test watch_files mqtt cms mes >> /home/uta_iot/dumpdb/$(date +%Y_%m_%d_%H_%M_%S).sql;
+mariabackup --backup --target-dir=$BACKUP  --user=root --password=uta1234
 END=$(($SECONDS - $START))
-logger "dumpdb finished in" $END "second(s)"
+logger "fullbackup finished in" $END "second(s)"
 START=${SECONDS}
-mv /home/uta_iot/dumpdb/* /home/uta_iot/utashare_iotdb/
+tar cvf $BACKUP.tar $BACKUP
+mv $BACKUP.tar /home/uta_iot/utashare_iotdb/
 END=$(($SECONDS - $START))
 logger "move files finished in" $END "second(s)"
 #/usr/bin/find /home/uta_iot/utashare_iotdb/ -mtime +10  -exec rm -rf {} \;
