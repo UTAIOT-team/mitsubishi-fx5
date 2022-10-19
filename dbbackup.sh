@@ -6,7 +6,7 @@ mariabackup --backup --target-dir=$BACKUP  --user=root --password=uta1234
 END=$(($SECONDS - $START))
 logger "fullbackup finished in" $END "second(s)"
 START=${SECONDS}
-tar cvf $BACKUP.tar $BACKUP
+tar -cvf $BACKUP.tar $BACKUP  --remove-files
 mv $BACKUP.tar /home/uta_iot/utashare_iotdb/
 END=$(($SECONDS - $START))
 logger "move files finished in" $END "second(s)"
