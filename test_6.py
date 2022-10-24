@@ -21,6 +21,8 @@ from sqlalchemy import update
 from datetime import datetime
 from datetime import timedelta
 from ping3 import ping
+import subprocess
+from subprocess import PIPE
 NOW = datetime.today()
 
 
@@ -44,10 +46,18 @@ def PLC_connect(name,host,reg,q,i,times,e):
 		hostip=host.split(":")[0]
 		gateway=hostip.replace(".1.",".3.")
 		chk_ping=ping(hostip,timeout=1)
-		if name!='ai4' and name!='mj4':
-			chk2_ping=ping(gateway,timeout=1)
+		if name=='ai4':
+			# chk2_ping=ping(hostip,timeout=1)
+			args = ['sshpass', '-p', '', 'ssh', '-oHostKeyAlgorithms=+ssh-rsa', 'root@10.10.0.181', 'ping 10.10.1.49 -w 1 -c 1']
+			comp_process = subprocess.run(args,stdout=PIPE, stderr=PIPE)
+			if comp_process.returncode==0:
+				chk2_ping=str(comp_process.stdout).split("/")[-1].replace(" ms\\n'","")
+			else:
+				chk2_ping=None
+		elif name=='mj4':
+			chk2_ping=ping('192.168.2.187',timeout=1)
 		else:
-			chk2_ping=ping(hostip,timeout=1)
+			chk2_ping=ping(gateway,timeout=1)
 
 		res['ping']=chk_ping
 		if chk_ping:
