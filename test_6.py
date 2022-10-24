@@ -25,7 +25,8 @@ NOW = datetime.today()
 
 
 def PLC_connect(name,host,reg,q,i,times,e):
-	res={'name':name ,'parts': np.nan ,'value': np.nan , 'user_id': np.nan ,'work_order_id': np.nan}
+	res={'name':name ,'parts': np.nan ,'value': np.nan , \
+		'user_id': np.nan ,'work_order_id': np.nan,'option1':np.nan,'option2':np.nan,'ping':np.nan}
 	global NOW
 	noon_st=NOW.replace(hour=12,minute=0,second=0,microsecond=0)
 	noon_ed=noon_st.replace(hour=13)
@@ -43,7 +44,12 @@ def PLC_connect(name,host,reg,q,i,times,e):
 		hostip=host.split(":")[0]
 		gateway=hostip.replace(".1.",".3.")
 		chk_ping=ping(hostip,timeout=1)
-		gateway_ping=ping(gateway,timeout=1)
+		if name!='ai4' and name!='mj4':
+			chk2_ping=ping(gateway,timeout=1)
+		else:
+			chk2_ping=ping(hostip,timeout=1)
+
+		res['ping']=chk_ping
 		if chk_ping:
 			try:
 				fx5 = FX5.get_connection(host)
@@ -65,13 +71,13 @@ def PLC_connect(name,host,reg,q,i,times,e):
 
 			except Exception as err:
 				print("PLC connect err",name, err)
-				e[i] = {'name':name,'err': 'PLC ERR ' + str(err) + 'and gateway_ping:' + str(gateway_ping)}
+				e[i] = {'name':name,'err': 'PLC ERR ' + str(err) + 'and gateway_ping:' + str(chk2_ping)}
 				pass
 
 		else:
-			e[i] = {'name':name,'err': 'NO responds. chk_ping(' + str(chk_ping) +')'+ 'and gateway_ping:' + str(gateway_ping)}
+			e[i] = {'name':name,'err': 'NO responds. chk_ping(' + str(chk_ping) +')'+ 'and gateway_ping:' + str(chk2_ping)}
 			#ping 超時判斷，待對策處理
-			if not gateway_ping:
+			if not chk2_ping:
 				if noon_st<=NOW<noon_ed:
 					res['value']=509
 				elif dusk_st<=NOW<dusk_ed:
@@ -120,7 +126,7 @@ class DB_connect:
 		pd.set_option('display.max_columns', None)
 		print('new------------------')
 		# newdf=pd.json_normalize(q)
-		newdf=df
+		newdf=df.drop(columns=['ping'])
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		print(newdf)
 		preq=[{} for _ in range(len(newdf))]
@@ -245,7 +251,7 @@ if __name__ == '__main__':
 			#print(q[i])
 
 		# print(q)
-		# print(e)
+		print(e)
 		for i in range(len(e)-1,0,-1):
 			if e[i]=={}:
 				del e[i]
