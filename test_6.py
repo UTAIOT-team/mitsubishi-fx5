@@ -251,8 +251,9 @@ if __name__ == '__main__':
 			#print(q[i])
 
 		# print(q)
-		print(e)
-		for i in range(len(e)-1,0,-1):
+		# print((len(e)),e)
+		for i in range(len(e)-1,-1,-1):
+			#print(i,e[i])
 			if e[i]=={}:
 				del e[i]
 
