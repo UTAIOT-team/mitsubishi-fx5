@@ -50,12 +50,16 @@ def PLC_connect(name,host,reg,q,i,times,e):
 			# chk2_ping=ping(hostip,timeout=1)
 			args = ['sshpass', '-p', '', 'ssh', '-oHostKeyAlgorithms=+ssh-rsa', 'root@10.10.0.181', 'ping 10.10.1.49 -w 1 -c 1']
 			comp_process = subprocess.run(args,stdout=PIPE, stderr=PIPE)
+			print(args)
+			print(comp_process.stdout)
 			if comp_process.returncode==0:
-				chk2_ping=str(comp_process.stdout).split("/")[-1].replace(" ms\\n'","")
+				chk2_ping=float(str(comp_process.stdout).split("/")[-1].replace(" ms\\n'",""))
 			else:
 				chk2_ping=None
+			print(name,chk2_ping,comp_process.returncode,type(comp_process.returncode))
 		elif name=='mj4':
 			chk2_ping=ping('192.168.2.187',timeout=1)
+			print(name,chk2_ping)
 		else:
 			chk2_ping=ping(gateway,timeout=1)
 
@@ -136,6 +140,8 @@ class DB_connect:
 		pd.set_option('display.max_columns', None)
 		print('new------------------')
 		# newdf=pd.json_normalize(q)
+		print(df['ping'])
+		print(df['ping'].dtypes)
 		newdf=df.drop(columns=['ping'])
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		print(newdf)
