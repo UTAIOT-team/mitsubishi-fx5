@@ -3,7 +3,7 @@ START=${SECONDS}
 DIR=/home/uta_iot/dumpdb/
 BACKUP=$(date +%Y_%m_%d_%H_%M_%S)_fullbackup
 #mysqldump -uroot -puta1234 -q --single-transaction --databases test watch_files mqtt cms mes >> /home/uta_iot/dumpdb/$(date +%Y_%m_%d_%H_%M_%S).sql;
-mariabackup --backup --target-dir=$BACKUP  --user=root --password=uta1234
+mariabackup --backup --target-dir=$DIR$BACKUP  --user=root --password=uta1234
 END=$(($SECONDS - $START))
 logger "fullbackup finished in" $END "second(s)"
 START=${SECONDS}
