@@ -57,9 +57,6 @@ def PLC_connect(name,host,reg,q,i,times,e):
 			else:
 				chk2_ping=None
 			print(name,chk2_ping,comp_process.returncode,type(comp_process.returncode))
-		elif name=='mj4':
-			chk2_ping=ping('192.168.2.187',timeout=1)
-			print(name,chk2_ping)
 		else:
 			chk2_ping=ping(gateway,timeout=1)
 
