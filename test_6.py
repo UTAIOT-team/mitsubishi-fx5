@@ -239,54 +239,58 @@ if __name__ == '__main__':
 	q = [{} for _ in range(n)]
 	tempdf=pd.DataFrame({},columns=['name','date','parts','during','speed'])
 	
-	while True:
-		allst=time.time()
-		times += 1
-		NOW=datetime.today()
-		print(NOW)
-		threads=[]
-		reg = {}
-		e = [{} for _ in range(n)]
-		for i in range(n):
-			name=machinedf.iloc[i,0].lower()
-			host=machinedf.iloc[i,1]
-			reg=machinedf.iloc[i,2:].to_dict()
-			#print(name,host,reg,times)
-			#log=PLC_connect(name,host,reg,q,i,times)
-			threads.append(threading.Thread(target=PLC_connect, args=(name,host,reg,q,i,times,e)))
-			threads[i].start()
-			#threads[i].join()
+	try:
+		while True:
+			allst=time.time()
+			times += 1
+			NOW=datetime.today()
+			print(NOW)
+			threads=[]
+			reg = {}
+			e = [{} for _ in range(n)]
+			for i in range(n):
+				name=machinedf.iloc[i,0].lower()
+				host=machinedf.iloc[i,1]
+				reg=machinedf.iloc[i,2:].to_dict()
+				#print(name,host,reg,times)
+				#log=PLC_connect(name,host,reg,q,i,times)
+				threads.append(threading.Thread(target=PLC_connect, args=(name,host,reg,q,i,times,e)))
+				threads[i].start()
+				#threads[i].join()
 
-		for i in range(n):
-			# name=machinedf.iloc[i,0].lower()
-			threads[i].join()
-			#print(name + '----- TestFX5 start ------')
-			#print(q[i])
+			for i in range(n):
+				# name=machinedf.iloc[i,0].lower()
+				threads[i].join()
+				#print(name + '----- TestFX5 start ------')
+				#print(q[i])
 
-		# print(q)
-		# print((len(e)),e)
-		for i in range(len(e)-1,-1,-1):
-			#print(i,e[i])
-			if e[i]=={}:
-				del e[i]
+			# print(q)
+			# print((len(e)),e)
+			for i in range(len(e)-1,-1,-1):
+				#print(i,e[i])
+				if e[i]=={}:
+					del e[i]
 
-		ef=pd.DataFrame(e)
-		print(ef)
-		if not ef.empty:
-			ef['date']=NOW
-			with open('./err.csv', mode = 'a+',newline='\n') as f:
-				ef.to_csv(f , index=False,sep=",", line_terminator='\n', encoding='utf-8')
-		df=pd.DataFrame(q)
-		df=df.dropna(subset='name')
-		df=df.reset_index()
-		df['work_order_id']=df['work_order_id'].astype("Int64")
-		df['parts']=df['parts'].astype("Int64")
-		print(df)
-		conn = DB_connect()
-		tempdf = conn.write_to_sql(df,times,tempdf)
-		print(tempdf)
-		conn.close()
-		print(datetime.now())
-		print('done all cost time %f' % (time.time()-allst))
-		time.sleep(10)
-	
+			ef=pd.DataFrame(e)
+			print(ef)
+			if not ef.empty:
+				ef['date']=NOW
+				with open('./err.csv', mode = 'a+',newline='\n') as f:
+					ef.to_csv(f , index=False,sep=",", line_terminator='\n', encoding='utf-8')
+			df=pd.DataFrame(q)
+			df=df.dropna(subset='name')
+			df=df.reset_index()
+			df['work_order_id']=df['work_order_id'].astype("Int64")
+			df['parts']=df['parts'].astype("Int64")
+			print(df)
+			conn = DB_connect()
+			tempdf = conn.write_to_sql(df,times,tempdf)
+			print(tempdf)
+			conn.close()
+			print(datetime.now())
+			print('done all cost time %f' % (time.time()-allst))
+			time.sleep(10)
+			
+	except Exception as e:
+		import LineNotify
+		LineNotify.lineNotifyMessage(e)	
