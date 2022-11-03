@@ -4,18 +4,18 @@ b=$(pgrep -f "oee_today3.py")
 
 if [ -n "$a" ] && [ -n "$b" ]
 then
-    echo "All processes of rc-local.service are Running"
-    logger "All processes of rc-local.service are Running"
+    echo "All processes of rc-local.service are Running."
+    logger "All processes of rc-local.service are Running."
 else
-    if ![ -n "$a" ]
+    if !([ -n "$a" ])
     then
-        echo "test_6.py not active"
-        logger "test_6.py not active"
+        echo "test_6.py isn't active"
+        logger "test_6.py isn't active, restart rc-local.service."
     fi
-    if ![ -n "$b" ]
+    if !([ -n "$b" ])
     then
-        echo "oee_today3.py not active"
-        logger "oee_today3.py not active"
+        echo "oee_today3.py isn't active"
+        logger "oee_today3.py isn't active, restart rc-local.service."
     fi
     systemctl stop rc-local.service
     systemctl start rc-local.service
