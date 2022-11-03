@@ -9,12 +9,12 @@ then
 else
     if !([ -n "$a" ])
     then
-        echo "test_6.py isn't active"
+        echo "test_6.py isn't active, restart rc-local.service."
         logger "test_6.py isn't active, restart rc-local.service."
     fi
     if !([ -n "$b" ])
     then
-        echo "oee_today3.py isn't active"
+        echo "oee_today3.py isn't active, restart rc-local.service."
         logger "oee_today3.py isn't active, restart rc-local.service."
     fi
     systemctl stop rc-local.service
