@@ -615,7 +615,7 @@ WHERE id ={schdf.loc[i,'id']};
 		table = name
 		
 		#select ID to reduce
-		sql = "Select * from " + table
+		sql = "Select * from " + table + " order by date asc"
 		seldf = pd.read_sql_query(sql, self.__engine)
 		# seldf['value']=seldf['value'].fillna('NA') # nan == nan is Flase
 		# print(seldf)
