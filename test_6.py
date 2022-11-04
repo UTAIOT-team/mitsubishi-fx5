@@ -181,7 +181,7 @@ if __name__ == '__main__':
 		newdf=newdf.reset_index()
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		newdf['parts']=newdf['parts'].astype("Int64")
-		# print('new------------------')
+		print('new------------------')
 		print(newdf)
 		# print(df['ping'])
 		# print(df['ping'].dtypes)
