@@ -24,6 +24,8 @@ from ping3 import ping
 import subprocess
 from subprocess import PIPE
 NOW = datetime.today()
+import LineNotify
+import sqlite3
 
 
 def PLC_connect(name,host,reg,q,i,times,e):
@@ -117,6 +119,17 @@ class DB_connect:
 			table=df.loc[i,'name'].lower()
 			newdf.iloc[[i],2:].to_sql(table, self.__engine, if_exists='append', index=False)
 
+	def catch_sqlite(self):
+		if os.path.exists('temp.db'):
+			with sqlite3.connect('temp.db') as dbcon:
+				tables = list(pd.read_sql_query("SELECT name FROM sqlite_master WHERE type='table';", dbcon)['name'])
+				# out = {tbl : pd.read_sql_query(f"SELECT * from {tbl}", dbcon) for tbl in tables}
+				for table in tables:
+					df=pd.read_sql_query(f"SELECT * from {table}", dbcon)
+					df.to_sql(table, self.__engine, if_exists='append', index=False)
+
+			os.remove('temp.db')
+
 	def close(self):
 		self.__engine.dispose()
 
@@ -207,12 +220,11 @@ if __name__ == '__main__':
 		try:
 			if times>6:
 				conn = DB_connect()
+				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
 				conn.close()
 		except Exception as e:
-			import LineNotify
 			LineNotify.lineNotifyMessage(e)
-			import sqlite3
 			newdf['date']=NOW
 			conn = sqlite3.connect('temp.db')
 			for i in range(len(newdf)):
