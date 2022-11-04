@@ -202,13 +202,13 @@ if __name__ == '__main__':
 		else:
 			newdf['speed']=tempdf['speed']
 		
-
+		print('temp------------------')
+		print(tempdf)
 		try:
-			conn = DB_connect()
-			conn.write_to_sql(newdf)
-			print('temp------------------')
-			print(tempdf)
-			conn.close()
+			if times>6:
+				conn = DB_connect()
+				conn.write_to_sql(newdf)
+				conn.close()
 		except Exception as e:
 			import LineNotify
 			LineNotify.lineNotifyMessage(e)
