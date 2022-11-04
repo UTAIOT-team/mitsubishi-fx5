@@ -292,6 +292,7 @@ if __name__ == '__main__':
 			import LineNotify
 			LineNotify.lineNotifyMessage(e)
 			import sqlite3
+			df['date']=NOW
 			conn = sqlite3.connect('temp.db')
 			for i in range(len(df)):
 				table=df.loc[i,'name'].lower()
