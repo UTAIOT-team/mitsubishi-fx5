@@ -111,109 +111,11 @@ class DB_connect:
 			data=dbconfig.readlines()
 		self.__engine=sqla.create_engine('mysql+mysqlconnector://'+data[0])
 
-	def read_last_from(self,name):
-		t1=time.time()
-		table = name
-
-		#select last ID
-		sql = "Select id from " + table +" ORDER BY id DESC LIMIT 0 , 1"
-		iddf=pd.read_sql_query(sql, self.__engine)
-		if not iddf.empty:
-			sql = "Select * from " + table +" Where id="+iddf.iloc[0,0].astype("str")
-			predf=pd.read_sql_query(sql, self.__engine)
-			# predf.drop(columns=['id',],inplace=True)
-			#predf.columns=['parts','status','UID','WID']
-			predf.insert(0,'name',table)
-			#st1=predf.loc[0,'status'].astype("int")
-		else:
-			#can't find id
-			#st1=None
-			predf=pd.DataFrame([{'name':name, 'parts':np.nan, 'value':np.nan, 'user_id':np.nan, 'work_order_id':np.nan, 'option1':np.nan, 'option2':np.nan}])
-		t2=time.time()
-		return predf.iloc[0,0:].to_dict()
-		print('select id from database %s cost time %f' % (name,(t2-t1)))
-
-	def write_to_sql(self,df,times,tempdf):
-		pd.set_option('display.max_columns', None)
-		print('new------------------')
-		# newdf=pd.json_normalize(q)
-		newdf=df
-		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
-		print(newdf)
-		preq=[{} for _ in range(len(newdf))]
-		
-		# read last from database
-		srtt1=time.time()
-		for i in range(len(newdf)):
-			preq[i]=self.read_last_from(newdf.loc[i,'name'])
-
-		print('pre------------------')
-		predf=pd.json_normalize(preq)
-		predf['work_order_id']=predf['work_order_id'].astype("Int64")
-		print(predf)
-		global NOW
-		print(tempdf.speed.eq(0).all())
-		print(tempdf.speed.eq(0).any())
-		if times==1 or tempdf.speed.empty:
-			if tempdf.speed.empty:
-				tempdf['name']=newdf['name']
-				tempdf['parts']=newdf['parts']
-				tempdf['date']=NOW
-				tempdf['during']=NOW-predf['date']
-				tempdf['speed']=round((newdf['parts']-predf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
-				newdf['speed']=tempdf['speed']
-			else:
-				for i in range(len(tempdf)):
-					if not tempdf.loc[i,'speed']>0:
-						print(tempdf.loc[i,['name','speed']])
-						tempdf.loc[i,'parts']=newdf.loc[i,'parts']
-						tempdf.loc[i,'date']=NOW
-						tempdf.loc[i,'during']=NOW-predf.loc[i,'date']
-						tempdf.loc[i,'speed']=round((newdf.loc[i,'parts']-predf.loc[i,'parts'])/tempdf.loc[i,'during'].total_seconds()*60,ndigits=0)
-						newdf.loc[i,'speed']=tempdf.loc[i,'speed']
-			print('tempdf')
-			print(tempdf)
-
-			
-		elif times%6==1:
-			tempdf['during']=NOW-tempdf['date']
-			print(tempdf)
-			tempdf['speed']=round((newdf['parts']-tempdf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
-			tempdf['parts']=newdf['parts']
-			tempdf['date']=NOW
-			newdf['speed']=tempdf['speed']
-			print(newdf)
-		else:
-			newdf['speed']=tempdf['speed']
-
-		# newdf['during']=datetime.today()-predf['date']
-		# newdf['speed']=round((newdf['parts']-predf['parts'])/newdf['during'].dt.total_seconds()*60,ndigits=0)
-		# print(newdf)
-		# newdf.drop(columns=['during'],inplace=True)
-
+	def write_to_sql(self,df):
 		# add to database
-		for i in range(len(newdf)):
-			# print(q[i])
-			# print(str(newdf.iloc[i,2]),type(newdf.iloc[i,2]))
-			# None is a nan as numpy.float type
-			# if(str(newdf.iloc[i,2])!= 'nan' and str(newdf.iloc[i,2])!= 'None' ):
-			table=newdf.loc[i,'name'].lower()
-			sql = "Select * from " + table
-			st1=predf.loc[i,'value']
-			st2=st1 if pd.isna(newdf.loc[i,'value']) else newdf.loc[i,'value']
-			if pd.isnull(newdf.loc[i,'parts']):
-				newdf.loc[i,'parts']=predf.loc[i,'parts']
-
-			if st1!=st2:
-				#print(table,st1,st2,'not equal')
-				#print(newdf.iloc[i,1:])
-				#resdf=newdf.iloc[[i],1:]
-				print(newdf.iloc[[i],1:])
-				print(table,st1,st2,'not equal','| write to database')
-			else:
-				print(table,st1,st2,'is equal','| write to database')
+		for i in range(len(df)):
+			table=df.loc[i,'name'].lower()
 			newdf.iloc[[i],2:].to_sql(table, self.__engine, if_exists='append', index=False)
-		return tempdf
 
 	def close(self):
 		self.__engine.dispose()
@@ -274,30 +176,48 @@ if __name__ == '__main__':
 			ef['date']=NOW
 			with open('./err.csv', mode = 'a+',newline='\n') as f:
 				ef.to_csv(f , index=False,sep=",", line_terminator='\n', encoding='utf-8')
-		df=pd.DataFrame(q)
-		df=df.dropna(subset='name')
-		df=df.reset_index()
-		df['work_order_id']=df['work_order_id'].astype("Int64")
-		df['parts']=df['parts'].astype("Int64")
-		print(df)
-		print(df['ping'])
-		print(df['ping'].dtypes)
-		df=df.drop(columns=['ping'])
+		newdf=pd.DataFrame(q)
+		newdf=newdf.dropna(subset='name')
+		newdf=newdf.reset_index()
+		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
+		newdf['parts']=newdf['parts'].astype("Int64")
+		print(newdf)
+		# print(df['ping'])
+		# print(df['ping'].dtypes)
+		newdf=newdf.drop(columns=['ping'])
+		print('new------------------')
+		print(newdf)
+		# print(NOW,times,'\n',tempdf)
+		if times==1: #init
+			tempdf['name']=newdf['name']
+			tempdf['parts']=newdf['parts']
+			tempdf['date']=NOW
+			
+		elif times%6==1:
+			tempdf['during']=NOW-tempdf['date']
+			tempdf['speed']=round((newdf['parts']-tempdf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
+			tempdf['parts']=newdf['parts']
+			tempdf['date']=NOW
+			newdf['speed']=tempdf['speed']
+		else:
+			newdf['speed']=tempdf['speed']
+		
+
 		try:
 			conn = DB_connect()
-			tempdf = conn.write_to_sql(df,times,tempdf)
+			conn.write_to_sql(newdf,times,tempdf)
 			print(tempdf)
 			conn.close()
 		except Exception as e:
 			import LineNotify
 			LineNotify.lineNotifyMessage(e)
 			import sqlite3
-			df['date']=NOW
+			newdf['date']=NOW
 			conn = sqlite3.connect('temp.db')
-			for i in range(len(df)):
-				table=df.loc[i,'name'].lower()
+			for i in range(len(newdf)):
+				table=newdf.loc[i,'name'].lower()
 				sql = "Select * from " + table
-				df.iloc[[i],2:].to_sql(table, conn, if_exists='append', index=False)
+				newdf.iloc[[i],2:].to_sql(table, conn, if_exists='append', index=False)
 
 		print(datetime.now())
 		print('done all cost time %f' % (time.time()-allst))
