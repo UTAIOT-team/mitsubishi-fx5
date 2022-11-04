@@ -205,7 +205,7 @@ if __name__ == '__main__':
 
 		try:
 			conn = DB_connect()
-			conn.write_to_sql(newdf,times,tempdf)
+			conn.write_to_sql(newdf)
 			print(tempdf)
 			conn.close()
 		except Exception as e:
