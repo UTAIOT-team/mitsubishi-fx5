@@ -703,8 +703,8 @@ if __name__ == '__main__':
 		# for i in range(2,3): # for debug
 			conn = DB_connect()
 			name=machine[i].lower()
-			if name!='mx14' and name!='mx5':
-				conn.reduce_data(name)
+			# if name!='mx14' and name!='mx5':
+			# 	conn.reduce_data(name)
 			seldf = conn.read_from(name)
 			# if seldf is not None:
 			if not seldf.empty:
