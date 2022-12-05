@@ -559,9 +559,10 @@ if __name__ == '__main__':
 					chart2.y_axis.majorUnit = 10
 					chart2.y_axis.scaling.max=factor*10
 				else:
-					n=math.ceil(piedf.times.max()/factor)
-					chart2.y_axis.majorUnit = n
-					chart2.y_axis.scaling.max = factor*n
+					if factor!=0:
+						n=math.ceil(piedf.times.max()/factor)
+						chart2.y_axis.majorUnit = n
+						chart2.y_axis.scaling.max = factor*n
 				chart2.y_axis.scaling.min=0
 				chart2.y_axis.minorUnit = 1
 				chart1 += chart2
