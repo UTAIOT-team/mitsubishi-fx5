@@ -405,7 +405,10 @@ if __name__ == '__main__':
 			shift=timedelta(days=0)
 		NOW=datetime.today().date() - shift
 		vdate=str(NOW).replace('-','')
-	path=dir+vdate+'/'+vdate+'_excel_output.xlsx'
+	path=dir+vdate+'/'
+	if not os.path.exists(path):
+		os.makedirs(path)
+	path=path+vdate+'_excel_output.xlsx'
 	print(NOW)
 	allst=time.time()
 	# read from machine config
