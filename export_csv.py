@@ -395,7 +395,7 @@ if __name__ == '__main__':
 	dir='/home/uta_iot/grafana_output/機台稼動明細/'
 	if len(sys.argv) >1:
 		NOW=datetime.strptime(sys.argv[1], "%Y%m%d").date()
-		path=dir+sys.argv[1]+'_excel_output.xlsx'
+		vdate=sys.argv[1]
 	else:
 		if datetime.today().weekday()==0 and datetime.today() < datetime.today().replace(hour=8):
 			shift=timedelta(days=3)
@@ -404,7 +404,8 @@ if __name__ == '__main__':
 		else:
 			shift=timedelta(days=0)
 		NOW=datetime.today().date() - shift
-		path=dir+str(NOW).replace('-','')+'_excel_output.xlsx'
+		vdate=str(NOW).replace('-','')
+	path=dir+vdate+'/'+vdate+'_excel_output.xlsx'
 	print(NOW)
 	allst=time.time()
 	# read from machine config
