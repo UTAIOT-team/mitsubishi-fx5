@@ -552,6 +552,7 @@ class DB_connect:
 				rest+=noon
 
 		if viewdf.C.gt(0).all():
+			schdf.loc[schdf.raw_by=='afternoon','value']=VALUE_OF_PLAN_ST
 			dusk=timedelta(0)
 			if self.today_now > (chk17 - CHK_TOLERANCE):
 				dusk=self.today_now - (chk17 - CHK_TOLERANCE)
