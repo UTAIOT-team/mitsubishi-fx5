@@ -561,7 +561,7 @@ class DB_connect:
 			# check overtime
 			start = today_min.replace(hour=17,minute=30)
 			if viewdf.overtime.gt(0).all():
-				overtime_sec=viewdf.overtime.iloc[-1].astype(float)*60
+				overtime_sec=viewdf.overtime.iloc[-1].astype(float)*3600
 				end = start + timedelta(seconds=overtime_sec)
 				if viewdf.overtime.gt(6.5).all():
 					schdf.loc[schdf.raw_by=='night','date']=(start , today_min.replace(hour=23,minute=59,second=59) )
