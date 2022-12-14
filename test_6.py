@@ -229,9 +229,9 @@ if __name__ == '__main__':
 				viewdf=conn.read_schedule_view()
 				if viewdf.hrs.eq(0).any():
 					left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
-					right=viewdf[viewdf.hrs.eq(0)]
+					right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
 					right.columns=['name','value']
-					right['value']=10
+					right.value=10
 					right=right.loc[right.name.isin(left.name)]
 					print(right)
 					#newdf.update(right)
