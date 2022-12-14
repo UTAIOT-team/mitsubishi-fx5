@@ -130,6 +130,10 @@ class DB_connect:
 
 			os.remove('temp.db')
 
+	def read_schedule_view(self):
+		table = "schedule_view"
+		sql = "Select * from " + table + " where name='" + name + "'"
+
 	def close(self):
 		self.__engine.dispose()
 
@@ -220,6 +224,15 @@ if __name__ == '__main__':
 		try:
 			if times>6:
 				conn = DB_connect()
+				viewdf=conn.read_schedule_view()
+				if viewdf.hrs.eq(0).any():
+					left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
+					right=viewdf[viewdf.hrs.eq(0)]
+					right.columns=['name','value']
+					right.value=10
+					right=right.loc[right.name.isin(left.name)]
+					print(right)
+					#newdf.update(right)
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
 				conn.close()
