@@ -200,8 +200,7 @@ if __name__ == '__main__':
 		newdf=newdf.reset_index()
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		newdf['parts']=newdf['parts'].astype("Int64")
-		print('new------------------')
-		print(newdf)
+		
 		# print(df['ping'])
 		# print(df['ping'].dtypes)
 		newdf=newdf.drop(columns=['ping'])
@@ -221,8 +220,6 @@ if __name__ == '__main__':
 		else:
 			newdf['speed']=tempdf['speed']
 		
-		print('temp------------------')
-		print(tempdf)
 		try:
 			if times>6:
 				conn = DB_connect()
@@ -238,6 +235,7 @@ if __name__ == '__main__':
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
 				conn.close()
+		
 		except Exception as e:
 			LineNotify.lineNotifyMessage(e)
 			newdf['date']=NOW
@@ -247,6 +245,10 @@ if __name__ == '__main__':
 				sql = "Select * from " + table
 				newdf.iloc[[i],2:].to_sql(table, conn, if_exists='append', index=False)
 
+		print('new------------------')
+		print(newdf)
+		print('temp------------------')
+		print(tempdf)
 		print(datetime.now())
 		print('done all cost time %f' % (time.time()-allst))
 		time.sleep(10)
