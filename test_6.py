@@ -132,7 +132,9 @@ class DB_connect:
 
 	def read_schedule_view(self):
 		table = "schedule_view"
-		sql = "Select * from " + table + " where name='" + name + "'"
+		sql = "Select name, A+B+C+D+overtime as hrs from " + table
+		viewdf = pd.read_sql_query(sql, self.__engine)
+		return viewdf
 
 	def close(self):
 		self.__engine.dispose()
