@@ -581,14 +581,14 @@ class DB_connect:
 					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ST)
 				else:
 					rest+=dusk
-				# 	# As default	
-				# 	schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+					# As default	
+					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 
 			# no overtime
 			else:
 				# As default
-				# schdf.loc[schdf.raw_by=='night','date']=(start , start )
-				# schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+				schdf.loc[schdf.raw_by=='night','date']=(start , start )
+				schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 				# check dusk
 				if viewdf.D.gt(0).all():
 					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ST,VALUE_OF_PLAN_ED)
@@ -598,7 +598,7 @@ class DB_connect:
 				else:
 					rest+=dusk
 					# As default
-					# schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 					schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
 					schdf.loc[schdf.raw_by=='pre_last','date']=today_min.replace(hour=17,minute=00)
 
