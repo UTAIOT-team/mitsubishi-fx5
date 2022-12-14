@@ -230,7 +230,8 @@ if __name__ == '__main__':
 					right.columns=['name','value']
 					right.value=10
 					right=right.loc[right.name.isin(left.name)]
-					# print(right)
+					right.index=left[left.name.isin(right.name)].index
+					print(right)
 					newdf.update(right)
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
