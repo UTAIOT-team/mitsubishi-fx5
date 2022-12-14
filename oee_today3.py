@@ -550,6 +550,10 @@ class DB_connect:
 			else:
 				schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ED
 				rest+=noon
+		else: #no morring
+			# AS default
+			schdf.loc[schdf.raw_by=='morning','value']=VALUE_OF_PLAN_ED
+			schdf.loc[schdf.raw_by=='noon','value']=VALUE_OF_PLAN_ED
 
 		if viewdf.C.gt(0).all():
 			schdf.loc[schdf.raw_by=='afternoon','value']=VALUE_OF_PLAN_ST
@@ -601,6 +605,14 @@ class DB_connect:
 					schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
 					schdf.loc[schdf.raw_by=='pre_last','value']=VALUE_OF_PLAN_ED
 					schdf.loc[schdf.raw_by=='pre_last','date']=today_min.replace(hour=17,minute=00)
+		
+		else: # no afternoon
+			# AS default
+			schdf.loc[schdf.raw_by=='afternoon','value']=VALUE_OF_PLAN_ED
+			schdf.loc[schdf.raw_by=='dusk','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+			schdf.loc[schdf.raw_by=='night','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+			schdf.loc[schdf.raw_by=='midnight','value']=(VALUE_OF_PLAN_ED,VALUE_OF_PLAN_ED)
+			
 
 		# update to database
 		if len(schdf)>0:
