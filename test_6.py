@@ -231,7 +231,7 @@ if __name__ == '__main__':
 					left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
 					right=viewdf[viewdf.hrs.eq(0)]
 					right.columns=['name','value']
-					right.value=10
+					right['value']=10
 					right=right.loc[right.name.isin(left.name)]
 					print(right)
 					#newdf.update(right)
