@@ -236,11 +236,11 @@ if __name__ == '__main__':
 				if times%6==1:
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
-						msg1=msgdf1.loc[['name','value']].to_string()
+						msg1=msgdf1.loc[:,['name','value']].to_string()
 						print("msg1",msg1)
 					if newdf.value.eq(10).any():
 						msgdf2=newdf[newdf.value.ne(10)]
-						msg2=msgdf2.loc[['name','value']].to_string()
+						msg2=msgdf2.loc[:,['name','value']].to_string()
 						print("msg2",msg2)
 					msg="應開機未開機"+msg1+"無計畫開機"+msg2
 					if msg:
