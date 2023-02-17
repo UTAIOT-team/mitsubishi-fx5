@@ -242,7 +242,7 @@ if __name__ == '__main__':
 						msgdf2=newdf[newdf.value.ne(10)]
 						msg2=msgdf2.loc[:,['name','value']].to_string()
 						print("msg2",msg2)
-					msg="應開機未開機"+msg1+"無計畫開機"+msg2
+					msg="應開機未開機:\n"+msg1+"無計畫開機:\n"+msg2
 					if msg:
 						LineNotify.lineNotifyMessage(msg)
 					
