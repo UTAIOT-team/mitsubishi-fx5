@@ -233,6 +233,15 @@ if __name__ == '__main__':
 					right.index=left[left.name.isin(right.name)].index
 					print(right)
 					newdf.update(right)
+				if times%6==1:
+					if newdf.value.eq(9).any():
+						msgdf1=newdf[newdf.value.eq(9)].to_string
+					elif newdf.value.eq(10).any():
+						msgdf2=newdf[newdf.value.ne(10)].to_string
+					msg=msgdf1+msgdf2
+					if msg:
+						LineNotify.lineNotifyMessage(msg)
+					
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
 				conn.close()
