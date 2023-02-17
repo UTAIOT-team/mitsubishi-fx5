@@ -233,10 +233,12 @@ if __name__ == '__main__':
 					right.index=left[left.name.isin(right.name)].index
 					print(right)
 					newdf.update(right)
-				if times%6==1:
+				# if times%6==1: # 每分鐘推播
+				if times%30==1: # 每5分鐘推播
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
-						msg1=msgdf1.loc[:,['name','value']].to_string()
+						if ~msgdf1.empty:
+							msg1=msgdf1.loc[:,['name','value']].to_string()
 						print("msg1",msg1)
 					if newdf.value.eq(10).any():
 						left=newdf[newdf.value.ne(10)]
@@ -245,11 +247,13 @@ if __name__ == '__main__':
 						right.value=10
 						right=right.loc[right.name.isin(left.name)]
 						msgdf2=left.loc[left.name.isin(right.name)]
-						msg2=msgdf2.loc[:,['name','value']].to_string()
+						if ~msgdf2.empty:
+							msg2=msgdf2.loc[:,['name','value']].to_string()
 						print("msg2",msg2)
 					msg="\n應開機未開機:\n"+msg1+"\n無計畫開機:\n"+msg2
 					if msg:
-						LineNotify.lineNotifyMessage(msg)
+						if (NOW>NOW.replace(hour=9,minute=00)) or (NOW.weekday()<5):
+							LineNotify.lineNotifyMessage(msg)
 					
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
