@@ -233,8 +233,8 @@ if __name__ == '__main__':
 					right.index=left[left.name.isin(right.name)].index
 					print(right)
 					newdf.update(right)
-				if times%6==1: # 每分鐘推播
-				# if times%30==1: # 每5分鐘推播
+				# if times%6==1: # 每分鐘推播
+				if times%30==1: # 每5分鐘推播
 					msg=""
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
