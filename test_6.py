@@ -238,7 +238,7 @@ if __name__ == '__main__':
 					msg=""
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
-						if not msgdf1.empty:
+						if msgdf1.empty==False:
 							msg1=msgdf1.loc[:,['name','value']].to_string()
 							msg+="\n應開機未開機:\n"+msg1
 							print("msg1",msg1)
@@ -249,7 +249,7 @@ if __name__ == '__main__':
 						right.value=10
 						right=right.loc[right.name.isin(left.name)]
 						msgdf2=left.loc[left.name.isin(right.name)]
-						if not msgdf2.empty:
+						if msgdf2.empty==False:
 							msg2=msgdf2.loc[:,['name','value']].to_string()
 							print("msg2",msg2)
 							msg+="\n無計畫開機:\n"+msg2
