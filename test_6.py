@@ -247,7 +247,7 @@ if __name__ == '__main__':
 						msgdf2=left.loc[left.name.isin(right.name)]
 						msg2=msg2.loc[:,['name','value']].to_string()
 						print("msg2",msg2)
-					msg="應開機未開機:\n"+msg1+"\n無計畫開機:\n"+msg2
+					msg="\n應開機未開機:\n"+msg1+"\n無計畫開機:\n"+msg2
 					if msg:
 						LineNotify.lineNotifyMessage(msg)
 					
