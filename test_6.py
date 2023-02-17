@@ -239,10 +239,14 @@ if __name__ == '__main__':
 						msg1=msgdf1.loc[:,['name','value']].to_string()
 						print("msg1",msg1)
 					if newdf.value.eq(10).any():
-						msgdf2=newdf[newdf.value.ne(10)]
-						msg2=msgdf2.loc[:,['name','value']].to_string()
+						left=newdf[newdf.value.ne(10)]
+						right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
+						right.columns=['name','value']
+						right.value=10
+						right=right.loc[right.name.isin(left.name)]
+						msg2=right.loc[:,['name','value']].to_string()
 						print("msg2",msg2)
-					msg="應開機未開機:\n"+msg1+"無計畫開機:\n"+msg2
+					msg="應開機未開機:\n"+msg1+"\n無計畫開機:\n"+msg2
 					if msg:
 						LineNotify.lineNotifyMessage(msg)
 					
