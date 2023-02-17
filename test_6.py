@@ -235,11 +235,11 @@ if __name__ == '__main__':
 					newdf.update(right)
 				if times%6==1:
 					if newdf.value.eq(9).any():
-						msgdf1=newdf[newdf.value.eq(9)].to_string
-						print(msgdf1)
+						msgdf1=newdf[newdf.value.eq(9)].to_string()
+						print("msg1",msgdf1)
 					if newdf.value.eq(10).any():
-						msgdf2=newdf[newdf.value.ne(10)].to_string
-						print(msgdf2)
+						msgdf2=newdf[newdf.value.ne(10)].to_string()
+						print("msg2",msgdf2)
 					msg=msgdf1+msgdf2
 					if msg:
 						LineNotify.lineNotifyMessage(msg)
