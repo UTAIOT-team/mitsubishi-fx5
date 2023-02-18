@@ -254,7 +254,7 @@ if __name__ == '__main__':
 							print("msg2",msg2)
 							msg+="\n無計畫開機:\n"+msg2
 					if msg!="":
-						if (NOW>NOW.replace(hour=9,minute=00)) or (NOW.weekday()<5):
+						if (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
 							LineNotify.lineNotifyMessage(msg)
 					
 				conn.catch_sqlite()
