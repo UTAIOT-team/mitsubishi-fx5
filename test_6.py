@@ -239,9 +239,14 @@ if __name__ == '__main__':
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
 						if msgdf1.empty==False:
-							msg1=msgdf1.loc[:,['name','value']].to_string()
-							msg+="\n應開機未開機:\n"+msg1
-							print("msg1",msg1)
+							if (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
+									if viewdf[viewdf.hrs.lt(9)]:
+										pass
+									if viewdf[viewdf.hrs.ge(9)]:
+										pass
+									msg1=msgdf1.loc[:,['name','value']].to_string()
+									msg+="\n應開機未開機:\n"+msg1
+									print("msg1",msg1)
 					if newdf.value.eq(10).any():
 						left=newdf[newdf.value.ne(10)]
 						right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
@@ -254,7 +259,7 @@ if __name__ == '__main__':
 							print("msg2",msg2)
 							msg+="\n無計畫開機:\n"+msg2
 					if msg!="":
-						if (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
+						
 							LineNotify.lineNotifyMessage(msg)
 					
 				conn.catch_sqlite()
