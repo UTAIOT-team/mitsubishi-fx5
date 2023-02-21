@@ -261,7 +261,7 @@ if __name__ == '__main__':
 							print("msg2",msg2)
 							msg+="\n無計畫開機:\n"+msg2
 					if msg!="":
-							LineNotify.lineNotifyMessage(msg)
+						LineNotify.lineNotifyMessage(msg)
 					
 				conn.catch_sqlite()
 				conn.write_to_sql(newdf)
