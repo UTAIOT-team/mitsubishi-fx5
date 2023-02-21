@@ -239,9 +239,9 @@ if __name__ == '__main__':
 					if newdf.value.eq(9).any():
 						msgdf1=newdf[newdf.value.eq(9)]
 						if msgdf1.empty==False:
-							if viewdf.hrs.lt(9) and (NOW.replace(hour=16,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
+							if viewdf[viewdf.hrs.lt(9)].empty==False and (NOW.replace(hour=16,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
 								flag=True
-							elif viewdf.hrs.ge(9) and (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=18,minute=10)) and (NOW.weekday()<5):
+							elif viewdf[viewdf.hrs.ge(9)].empty==False and (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=18,minute=10)) and (NOW.weekday()<5):
 								flag=True
 							else:
 								flag=False
