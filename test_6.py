@@ -227,7 +227,7 @@ if __name__ == '__main__':
 				if viewdf.hrs.eq(0).any():
 					left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
 					right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
-					right.columns=['name','value']
+					right.columns=['name','value'] #hrs_rename_value
 					right.value=10
 					right=right.loc[right.name.isin(left.name)]
 					right.index=left[left.name.isin(right.name)].index
