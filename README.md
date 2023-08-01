@@ -3,6 +3,19 @@
     $sudo vim /lib/systemd/system/rc-local.service
 
     # add these in the end
+    [Unit]
+    Description=/etc/rc.local Compatibility
+    Documentation=man:systemd-rc-local-generator(8)
+    ConditionFileIsExecutable=/etc/rc.local
+    After=network.target
+
+    [Service]
+    Type=forking
+    ExecStart=/etc/rc.local start
+    TimeoutSec=0
+    RemainAfterExit=yes
+    GuessMainPID=no
+
     [Install]
     WantedBy=multi-user.target
     Alias=rc-local.service
