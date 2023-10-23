@@ -196,7 +196,7 @@ if __name__ == '__main__':
 			with open('./err.csv', mode = 'a+',newline='\n') as f:
 				ef.to_csv(f , index=False,sep=",", line_terminator='\n', encoding='utf-8')
 		newdf=pd.DataFrame(q)
-		newdf=newdf.dropna(subset='name')
+		newdf = newdf.dropna(subset=['name'])
 		newdf=newdf.reset_index()
 		newdf['work_order_id']=newdf['work_order_id'].astype("Int64")
 		newdf['parts']=newdf['parts'].astype("Int64")
