@@ -85,6 +85,7 @@ def PLC_connect(name,host,reg,q,i,times,e):
 			except Exception as err:
 				print("PLC connect err",name, err)
 				e[i] = {'name':name,'err': 'PLC ERR ' + str(err) + ' and gateway_ping:' + str(chk2_ping)}
+				fx5.close()
 				pass
 
 		else:
