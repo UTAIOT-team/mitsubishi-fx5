@@ -120,15 +120,17 @@ class DB_connect:
 			newdf.iloc[[i],2:].to_sql(table, self.__engine, if_exists='append', index=False)
 
 	def catch_sqlite(self):
-		if os.path.exists('temp.db'):
-			with sqlite3.connect('temp.db') as dbcon:
-				tables = list(pd.read_sql_query("SELECT name FROM sqlite_master WHERE type='table';", dbcon)['name'])
-				# out = {tbl : pd.read_sql_query(f"SELECT * from {tbl}", dbcon) for tbl in tables}
-				for table in tables:
-					df=pd.read_sql_query(f"SELECT * from {table}", dbcon)
+		with sqlite3.connect('temp.db') as dbcon:
+			tables = list(pd.read_sql_query("SELECT name FROM sqlite_master WHERE type='table';", dbcon)['name'])
+			# out = {tbl : pd.read_sql_query(f"SELECT * from {tbl}", dbcon) for tbl in tables}
+			for table in tables:
+				df=pd.read_sql_query(f"SELECT * from {table}", dbcon)
+				try:
 					df.to_sql(table, self.__engine, if_exists='append', index=False)
+				except Exception as e:
+					pass
 
-			os.remove('temp.db')
+			
 
 	def read_schedule_view(self):
 		table = "schedule_view"
@@ -157,6 +159,8 @@ if __name__ == '__main__':
 	n=len(machinedf)
 	q = [{} for _ in range(n)]
 	tempdf=pd.DataFrame({},columns=['name','date','parts','during','speed'])
+
+	conn = None
 
 	while True:
 		allst=time.time()
@@ -222,51 +226,49 @@ if __name__ == '__main__':
 		
 		try:
 			if times>6:
-				conn = DB_connect()
-				viewdf=conn.read_schedule_view()
-				if viewdf.hrs.eq(0).any():
-					left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
-					right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
-					right.columns=['name','value'] #hrs_rename_value
-					right.value=10
-					right=right.loc[right.name.isin(left.name)]
-					right.index=left[left.name.isin(right.name)].index
-					print(right)
-					newdf.update(right)
-				# if times%6==1: # 每分鐘推播
-				if times%30==1: # 每5分鐘推播
-					msg=""
-					if newdf.value.eq(9).any():
-						msgdf1=newdf[newdf.value.eq(9)]
-						if msgdf1.empty==False:
-							if viewdf[viewdf.hrs.lt(9)].empty==False and (NOW.replace(hour=16,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
-								flag=True
-							elif viewdf[viewdf.hrs.ge(9)].empty==False and (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=18,minute=10)) and (NOW.weekday()<5):
-								flag=True
-							else:
-								flag=False
-							if flag:
-								msg1=msgdf1.loc[:,['name','value']].to_string()
-								msg+="\n應開機未開機:\n"+msg1
-								print("msg1",msg1)
-					if newdf.value.eq(10).any():
-						left=newdf[newdf.value.ne(10)]
+				if conn is None:
+					conn = DB_connect()
+					viewdf=conn.read_schedule_view()
+					if viewdf.hrs.eq(0).any():
+						left=newdf[(newdf.value.eq(9)) | (newdf.value.eq(509))]
 						right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
-						right.columns=['name','value']
+						right.columns=['name','value'] #hrs_rename_value
 						right.value=10
 						right=right.loc[right.name.isin(left.name)]
-						msgdf2=left.loc[left.name.isin(right.name)]
-						if msgdf2.empty==False:
-							msg2=msgdf2.loc[:,['name','value']].to_string()
-							print("msg2",msg2)
-							msg+="\n無計畫開機:\n"+msg2
-					if msg!="":
-						LineNotify.lineNotifyMessage(msg)
-					
-				conn.catch_sqlite()
-				conn.write_to_sql(newdf)
-				conn.close()
-		
+						right.index=left[left.name.isin(right.name)].index
+						print(right)
+						newdf.update(right)
+					# if times%6==1: # 每分鐘推播
+					if times%30==1: # 每5分鐘推播
+						msg=""
+						if newdf.value.eq(9).any():
+							msgdf1=newdf[newdf.value.eq(9)]
+							if msgdf1.empty==False:
+								if viewdf[viewdf.hrs.lt(9)].empty==False and (NOW.replace(hour=16,minute=30)>NOW>NOW.replace(hour=8,minute=30)) and (NOW.weekday()<5):
+									flag=True
+								elif viewdf[viewdf.hrs.ge(9)].empty==False and (NOW.replace(hour=20,minute=30)>NOW>NOW.replace(hour=18,minute=10)) and (NOW.weekday()<5):
+									flag=True
+								else:
+									flag=False
+								if flag:
+									msg1=msgdf1.loc[:,['name','value']].to_string()
+									msg+="\n應開機未開機:\n"+msg1
+									print("msg1",msg1)
+						if newdf.value.eq(10).any():
+							left=newdf[newdf.value.ne(10)]
+							right=viewdf[viewdf.hrs.eq(0)].copy(deep=False)
+							right.columns=['name','value']
+							right.value=10
+							right=right.loc[right.name.isin(left.name)]
+							msgdf2=left.loc[left.name.isin(right.name)]
+							if msgdf2.empty==False:
+								msg2=msgdf2.loc[:,['name','value']].to_string()
+								print("msg2",msg2)
+								msg+="\n無計畫開機:\n"+msg2
+						if msg!="":
+							LineNotify.lineNotifyMessage(msg)
+
+
 		except Exception as e:
 			LineNotify.lineNotifyMessage(e)
 			newdf['date']=NOW
@@ -275,6 +277,17 @@ if __name__ == '__main__':
 				table=newdf.loc[i,'name'].lower()
 				sql = "Select * from " + table
 				newdf.iloc[[i],2:].to_sql(table, conn, if_exists='append', index=False)
+
+		finally:
+			if conn is not None:
+				if not isinstance(conn, sqlite3.Connection):
+					if os.path.exists('temp.db'):
+						conn.catch_sqlite()
+						os.remove('temp.db')
+					conn.write_to_sql(newdf)
+					conn.close()
+
+				conn = None
 
 		print('new------------------')
 		print(newdf)
