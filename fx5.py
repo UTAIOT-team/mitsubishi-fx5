@@ -58,7 +58,7 @@ class FX5:
 		#未接続なら接続
 		if not self.__isopen:
 			self.__client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IPv4,TCP
-			self.__client.settimeout(3) # 秒
+			self.__client.settimeout(4) # 秒
 			self.__client.connect((self.__ip, int(self.__port))) # IPとPORTを指定してバインドします
 			self.__isopen = True
 
