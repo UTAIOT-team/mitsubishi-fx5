@@ -20,7 +20,7 @@ if [ -f "$MYSQL_PIDFILE" ]; then
 
         MYSQL_PID=`cat $MYSQL_PIDFILE`
 
-        echo "-100" > /proc/$MYSQL_PID/oom_score_adj
+        echo "-17" > /proc/$MYSQL_PID/oom_score_adj
 
 else
 
