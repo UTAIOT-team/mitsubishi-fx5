@@ -10,11 +10,11 @@ if [ "$service_status" != "active" ]; then
     systemctl start mariadb.service
 
     # 等待5秒钟
-    sleep 10
+    #sleep 10
 
     # 检查服务是否成功启动
     service_status=$(systemctl is-active mariadb.service)
-    if [ "$service_status" == "active" ]; then
+    if [ "$service_status" = "active" ]; then
         echo "MariaDB 服务已成功启动。"
         logger "MariaDB 服务已成功启动。"
     else
