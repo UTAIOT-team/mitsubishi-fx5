@@ -13,14 +13,14 @@ if [ "$service_status" != "active" ]; then
     service_status=$(systemctl is-active mariadb.service)
     if [ "$service_status" == "active" ]; then
         echo "MariaDB 服务已成功启动。"
-        logger "无法启动 MariaDB 服务，请检查日志。"
+        logger "MariaDB 服务已成功启动。"
     else
         echo "无法启动 MariaDB 服务，请检查日志。"
         logger "无法启动 MariaDB 服务，请检查日志。"
     fi
 else
     echo "MariaDB 服务正在运行。"
-    logger "无法启动 MariaDB 服务，请检查日志。"
+    logger "MariaDB 服务正在运行。"
 fi
 
 b=$(pgrep -f "oee_today3.py")
@@ -31,4 +31,7 @@ then
     logger "oee_today3.py isn't active, restart rc-local.service."
     systemctl stop rc-local.service
     systemctl start rc-local.service
+else
+    echo "oee_today3.py is actived."
+    logger "oee_today3.py is  actived."
 fi
