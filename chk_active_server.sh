@@ -10,7 +10,7 @@ if [ "$service_status" != "active" ]; then
     systemctl start mariadb.service
 
     # 等待5秒钟
-    sleep 5
+    sleep 10
 
     # 检查服务是否成功启动
     service_status=$(systemctl is-active mariadb.service)
