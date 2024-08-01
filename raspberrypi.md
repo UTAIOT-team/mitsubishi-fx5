@@ -8,32 +8,35 @@ $sudo apt install python3-pandas python3-openpyxl python3-sqlalchemy python3-mys
 
 # rc-local setting
 $sudo nano /lib/systemd/system/rc-local.service
-    [Unit]
-    Description=/etc/rc.local Compatibility
-    Documentation=man:systemd-rc-local-generator(8)
-    ConditionFileIsExecutable=/etc/rc.local
-    After=network.target
+[Unit]
+Description=/etc/rc.local Compatibility
+Documentation=man:systemd-rc-local-generator(8)
+ConditionFileIsExecutable=/etc/rc.local
+After=network.target
 
-    [Service]
-    Type=forking
-    ExecStart=/etc/rc.local start
-    TimeoutSec=0
-    RemainAfterExit=yes
-    GuessMainPID=no
+[Service]
+Type=forking
+ExecStart=/etc/rc.local start
+TimeoutSec=0
+RemainAfterExit=yes
+GuessMainPID=no
 
-    [Install]
-    WantedBy=multi-user.target
-    Alias=rc-local.service
+[Install]
+WantedBy=multi-user.target
+Alias=rc-local.service
 
 $sudo nano /etc/rc.local
+#!/bin/sh -e
 
-    #!/bin/sh -e
+cd /home/pi/github_repo/mitsubishi-fx5/
+python3 test_6.py &
 
-    cd /home/pi/github_repo/mitsubishi-fx5/
-    python3 test_6.py &
-
-    exit 0
+exit 0
 
 $sudo systemctl enable rc-local.service
 $sudo systemctl start rc-local.service
 $sudo systemctl status rc-local.service
+
+# crontab setting
+$sudo crontab -e
+* * * * *  /home/pi/github_repo/mitsubishi-fx5/chk_active_edge.sh
