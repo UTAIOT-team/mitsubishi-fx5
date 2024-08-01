@@ -197,8 +197,8 @@ if __name__ == '__main__':
 		print(ef)
 		if not ef.empty:
 			ef['date']=NOW
-			with open('./err.csv', mode = 'a+',newline='\n') as f:
-				ef.to_csv(f , index=False,sep=",", line_terminator='\n', encoding='utf-8')
+			#with open('./err.csv', mode = 'a+',newline='\n') as f:
+			#	ef.to_csv(f , index=False,sep=",", lineterminator='\n', encoding='utf-8')
 		newdf=pd.DataFrame(q)
 		newdf = newdf.dropna(subset=['name'])
 		newdf=newdf.reset_index()
