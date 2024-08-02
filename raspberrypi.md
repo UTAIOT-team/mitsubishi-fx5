@@ -30,6 +30,7 @@ $sudo nano /etc/rc.local
 
 cd /home/pi/github_repo/mitsubishi-fx5/
 python3 test_6.py &
+#python3 test_6_w.py &
 
 exit 0
 
