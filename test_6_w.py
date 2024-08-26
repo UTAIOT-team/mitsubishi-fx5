@@ -46,7 +46,17 @@ def PLC_connect(name,host,reg,q,i,times,e):
 
 	try:
 		hostip=host.split(":")[0]
-		gateway=hostip.replace(".1.",".3.")
+		#gateway=hostip.replace(".1.",".3.")
+
+		# 将 IP 地址分割成四个部分
+		ip_parts = hostip.split('.')
+		# 将最后一部分转换为整数并加上 2
+		last_part = int(ip_parts[-1]) + 2
+		# 更新最后一部分并重新组合 IP 地址
+		ip_parts[-1] = str(last_part)
+		# 将新的 IP 地址组成 gateway
+		gateway = '.'.join(ip_parts)
+		# print(gateway)
 		chk_ping=ping(hostip,timeout=1)
 		# if name=='ai4':
 		# 	# chk2_ping=ping(hostip,timeout=1)
