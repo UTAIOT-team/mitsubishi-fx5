@@ -41,3 +41,4 @@ $sudo systemctl status rc-local.service
 # crontab setting
 $sudo crontab -e
 * * * * *  /home/pi/github_repo/mitsubishi-fx5/chk_active_edge.sh
+#* * * * *  /home/pi/github_repo/mitsubishi-fx5/chk_active_edge_w.sh
