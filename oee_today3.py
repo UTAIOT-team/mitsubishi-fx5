@@ -759,10 +759,16 @@ WHERE id ={updf.loc[i,'id']};
 
 if __name__ == '__main__':
 	allst=time.time()
-	# read from machine config
-	machinedf=pd.read_excel("machine_config.xlsx")
-	machinedf.columns=['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type','option1','op_type1','option2','op_type2']
-	machine = machinedf['name'].values.tolist()
+	colsname= ['name','host','parts','parts_type','status','status_type','UID','UID_type','WID','WID_type','option1','op_type1','option2','op_type2']
+	machinedf = pd.read_excel("machine_config.xlsx")
+	machinedf.columns = colsname
+	machine_wdf = pd.read_excel("machine_config_w.xlsx")
+	machine_wdf.columns = colsname
+
+	# 按行拼接
+	# union_df = pd.concat([machinedf, machine_wdf], ignore_index=True)
+	union_df = machine_wdf
+	machine = union_df['name'].values.tolist()
 	print(machine)
 	print(time.time()-allst)
 
@@ -806,8 +812,8 @@ if __name__ == '__main__':
 		print(oeedf)
 		print(piedf)
 		piedf=piedf.replace('NA',pd.NA)
-		conn.write_to_sql(oeedf,'oee')
-		conn.write_to_sql(piedf,'pie')
+		#conn.write_to_sql(oeedf,'oee')
+		#conn.write_to_sql(piedf,'pie')
 		conn.close()
 		alled = time.time()
 		# 列印結果
