@@ -812,8 +812,8 @@ if __name__ == '__main__':
 		print(oeedf)
 		print(piedf)
 		piedf=piedf.replace('NA',pd.NA)
-		#conn.write_to_sql(oeedf,'oee')
-		#conn.write_to_sql(piedf,'pie')
+		conn.write_to_sql(oeedf,'oee')
+		conn.write_to_sql(piedf,'pie')
 		conn.close()
 		alled = time.time()
 		# 列印結果
