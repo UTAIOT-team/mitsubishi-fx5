@@ -766,8 +766,8 @@ if __name__ == '__main__':
 	machine_wdf.columns = colsname
 
 	# 按行拼接
-	# union_df = pd.concat([machinedf, machine_wdf], ignore_index=True)
-	union_df = machine_wdf
+	union_df = pd.concat([machinedf, machine_wdf], ignore_index=True)
+	# union_df = machine_wdf
 	machine = union_df['name'].values.tolist()
 	print(machine)
 	print(time.time()-allst)
