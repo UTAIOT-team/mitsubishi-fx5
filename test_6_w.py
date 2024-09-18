@@ -225,7 +225,7 @@ if __name__ == '__main__':
 			tempdf['parts']=newdf['parts']
 			tempdf['date']=NOW
 			
-		elif times%6==1:
+		elif tempdf['parts']!=newdf['parts']:
 			tempdf['during']=NOW-tempdf['date']
 			tempdf['speed']=round((newdf['parts']-tempdf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
 			tempdf['parts']=newdf['parts']
