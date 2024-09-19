@@ -225,12 +225,19 @@ if __name__ == '__main__':
 			tempdf['parts']=newdf['parts']
 			tempdf['date']=NOW
 			
-		elif tempdf['parts']!=newdf['parts']:
-			tempdf['during']=NOW-tempdf['date']
-			tempdf['speed']=round((newdf['parts']-tempdf['parts'])/tempdf['during'].dt.total_seconds()*60,ndigits=0)
-			tempdf['parts']=newdf['parts']
-			tempdf['date']=NOW
-			newdf['speed']=tempdf['speed']
+		elif (tempdf['parts']!=newdf['parts']).any():
+			# 获取parts值不相等的行的布尔掩码
+			parts_changed = tempdf['parts'] != newdf['parts']
+			
+			# 只更新parts不相等的行
+			tempdf.loc[parts_changed, 'during'] = NOW - tempdf['date']
+			tempdf.loc[parts_changed, 'speed'] = round((newdf.loc[parts_changed, 'parts'] - tempdf.loc[parts_changed, 'parts']) / tempdf.loc[parts_changed, 'during'].dt.total_seconds() * 60, ndigits=0)
+			tempdf.loc[parts_changed, 'parts'] = newdf.loc[parts_changed, 'parts']
+			tempdf.loc[parts_changed, 'date'] = NOW
+
+			# 同步speed到newdf
+			newdf['speed'] = tempdf['speed']
+			
 		else:
 			newdf['speed']=tempdf['speed']
 		
